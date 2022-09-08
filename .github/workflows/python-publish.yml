@@ -1,6 +1,5 @@
 # This GitHub workflow is only needed for python package releases which are supposed to be published on pypi.
 
-
 # This workflows will upload a Python Package using Twine when a release is created
 # For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
 

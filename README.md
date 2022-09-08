@@ -1,78 +1,88 @@
-# Python Template Repository including Tox.ini, Unittests, Linting Actions and Coverage Measurements
+# edi-energy.de scraper
 
 <!--- you need to replace the `organization/repo_name` in the status badge URLs --->
 
-![Unittests status badge](https://github.com/Hochfrequenz/python_template_repository/workflows/Unittests/badge.svg)
-![Coverage status badge](https://github.com/Hochfrequenz/python_template_repository/workflows/Coverage/badge.svg)
-![Linting status badge](https://github.com/Hochfrequenz/python_template_repository/workflows/Linting/badge.svg)
-![Black status badge](https://github.com/Hochfrequenz/python_template_repository/workflows/Black/badge.svg)
+![Unittests status badge](https://github.com/Hochfrequenz/edi_energy_scraper/workflows/Unittests/badge.svg)
+![Coverage status badge](https://github.com/Hochfrequenz/edi_energy_scraper/workflows/Coverage/badge.svg)
+![Linting status badge](https://github.com/Hochfrequenz/edi_energy_scraper/workflows/Linting/badge.svg)
+![Black status badge](https://github.com/Hochfrequenz/edi_energy_scraper/workflows/Black/badge.svg)
+![PyPi Status Badge](https://img.shields.io/pypi/v/edi_energy_scraper)
 
-This is a template repository. It doesn't contain any useful code but only a minimal working setup for a Python project including:
+The Python package `edi_energy_scraper` provides easy to use methods to mirror the website edi-energy.de.
 
-- a basic **project structure** with
-  - tox.ini
-  - requirements.in
-  - and a requirements.txt derived from it
-  - an example class
-  - an example unit test (using pytest)
-- ready to use **Github Actions** for
-  - [pytest](https://pytest.org)
-  - [code coverage measurement](https://coverage.readthedocs.io) (fails below 80% by default)
-  - [pylint](https://pylint.org/) (only accepts 10/10 code rating by default)
-  - [mypy](https://github.com/python/mypy) (static type checks where possible)
-  - [black](https://github.com/psf/black) code formatter check
-    using [lgeiger/black-action](https://github.com/lgeiger/black-action)
+### Rationale / Why?
 
-By default it uses Python version 3.10.
+If you'd like to be informed about new regulations or data formats being published on edi-energy.de you can either
 
-## How to use this Repository on Your Machine
+- visit the site every day and hope that you see the changes if this is your favourite hobby,
+- or automate the task.
 
-This introduction assumes that you have tox installed already (
-see [installation instructions](https://tox.readthedocs.io/en/latest/install.html)) and that a `.toxbase` environment
-has been created.
+This repository helps you with the latter. It allows you to create an up-to-date copy of edi-energy.de on your local
+computer. Other than if you mirrored the files using `wget` or `curl`, you'll get a clean and intuitive directory
+structure.
 
-If this is the case, clone this repository and create the `dev` environment on your machine.
+From there you can e.g. commit the files into a VCS, scrape the PDF/Word files for later use...
+
+We're all hoping for the day of true digitization on which this repository will become obsolete.
+
+## How to use the Package (as a user)
+
+Install via pip:
 
 ```bash
-tox -e dev
+pip install edi_energy_scraper
 ```
 
-### How to use with PyCharm
+Create a directory in which you'd like to save the mirrored data:
 
-1. Create a new project using existing sources with your local working copy of this repository as root directory. Choose
-   the path `your_repo/.tox/dev/` as path of the "previously configured interpreter".
-2. Set the
-   default [test runner of your project](https://www.jetbrains.com/help/pycharm/choosing-your-testing-framework.html) to
-   pytest.
-3. Set the `src` directory as sources root (via right click, [docs](https://www.jetbrains.com/help/pycharm/content-root.html)).
-4. Set
-   the [working directory of the unit tests](https://www.jetbrains.com/help/pycharm/creating-run-debug-configuration-for-tests.html)
-   to the project root (instead of the unittest directory).
-
-### How to use with VS Code
-
-1. Open the folder with VS Code.
-2. **Select the python interpreter** which is created by tox. Open the command pallett with `CTRL + P` and type `Python: Select Interpreter`. Select the interpreter which is placed in `.tox/dev/Scripts/python.exe` under Windows or `.tox/dev/bin/python` under Linux and macOS.
-3. **Setup pytest and pylint**. Therefore we open the file `.vscode/settings.json` which should be automatically generated during the interpreter setup. Insert the following lines into the settings:
-
-```json
-    "python.testing.unittestEnabled": false,
-    "python.testing.nosetestsEnabled": false,
-    "python.testing.pytestEnabled": true,
-    "pythonTestExplorer.testFramework": "pytest",
-    "python.testing.pytestArgs": [
-        "unittests"
-    ],
-    "python.linting.pylintEnabled": true
+```bash
+mkdir edi_energy_de
 ```
-4. Create a `.env` file and insert the following line
-```
-PYTHONPATH=src:${PYTHONPATH}
-```
-This makes sure, that the imports are working for the unittests.
-At the moment I am not totally sure that it is the best practise, but it's getting the job done.
 
-5. Enjoy 🤗
+Then import it and start the download:
+
+```python
+from edi_energy_scraper import EdiEnergyScraper
+
+scraper = EdiEnergyScraper(path_to_mirror_directory="edi_energy_de")
+scraper.mirror()
+```
+
+This creates a directory structure:
+
+```
+-|-your_script_cwd.py
+ |-edi_energy_de
+    |- past (contains archived files)
+        |- ahb.pdf
+        |- ahb.docx
+        |- ...
+    |- current (contains files valid as of today)
+        |- mig.pdf
+        |- mig.docx
+        |- ...
+    |- future (contains files valid in the future)
+        |- allgemeine_festlegungen.pdf
+        |- schema.xsd
+        |- ...
+```
+
+To prevent a DOS, by default the script waits a random time in between 1 and 10 seconds between each file download. You can override this behaviour
+by providing your own "slow down" method:
+
+```python
+from edi_energy_scraper import EdiEnergyScraper
+from time import sleep
+
+scraper = EdiEnergyScraper(path_to_mirror_directory="edi_energy_de",
+                           dos_waiter=lambda: sleep(0))  # disable DOS protection
+```
+
+## How to use this Repository on Your Machine (for development)
+
+Please follow the instructions in
+our [Python Template Repository](https://github.com/Hochfrequenz/python_template_repository#how-to-use-this-repository-on-your-machine)
+. And for further information, see the [Tox Repository](https://github.com/tox-dev/tox).
 
 ## Contribute
 
