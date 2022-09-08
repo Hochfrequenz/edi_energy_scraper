@@ -10,7 +10,7 @@ from enum import Enum
 from pathlib import Path
 from random import randint
 from time import sleep
-from typing import Callable, Dict, Set
+from typing import Callable, Dict, Set, Union
 
 import requests
 from bs4 import BeautifulSoup, Comment  # type:ignore[import]
@@ -38,7 +38,7 @@ class EdiEnergyScraper:
     def __init__(
         self,
         root_url: str = "https://www.edi-energy.de",
-        path_to_mirror_directory: Path | str = Path("edi_energy_de"),
+        path_to_mirror_directory: Union[Path, str] = Path("edi_energy_de"),
         # HTML and PDF files will be stored relative to this
         dos_waiter: Callable = lambda: sleep(randint(1, 10)),
     ):
