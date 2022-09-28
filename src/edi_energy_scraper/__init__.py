@@ -4,6 +4,7 @@ A module to scrape data from edi-energy.de.
 import cgi
 import datetime
 import io
+import logging
 import os
 import re
 from enum import Enum
@@ -16,6 +17,9 @@ import requests
 from bs4 import BeautifulSoup, Comment  # type:ignore[import]
 from PyPDF2 import PdfReader  # type:ignore[import]
 from requests.models import CaseInsensitiveDict
+
+_logger = logging.getLogger("edi_energy_scraper")
+_logger.setLevel(logging.DEBUG)
 
 
 class Epoch(str, Enum):  # pylint: disable=too-few-public-methods
@@ -77,6 +81,7 @@ class EdiEnergyScraper:
         if not link.startswith("http"):
             link = f"{self._root_url}/{link.strip('/')}"  # remove trailing slashes from relative link
 
+        _logger.debug("Download %s", link)
         response = requests.get(link, timeout=5)
 
         file_name = EdiEnergyScraper._add_file_extension_to_file_basename(
@@ -88,22 +93,26 @@ class EdiEnergyScraper:
         # Save file if it does not exist yet
         if not os.path.isfile(file_path):
             with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
+                _logger.debug("Saving new PDF %s", file_path)
                 outfile.write(response.content)
             return file_path
 
         # First fix, different file types do just the same as before, only with correct file extension
         if not file_name.endswith(".pdf"):
             with open(file_path, "wb+") as outfile:
+                _logger.debug("Saving %s", file_path)
                 outfile.write(response.content)
             return file_path
 
         # Check if metadata has changed
         metadata_has_changed = self._have_different_metadata(response.content, file_path)
         if metadata_has_changed:  # delete old file and replace with new one
+            _logger.debug("Metadata for PDF %s changed; Replacing it", file_path)
             os.remove(file_path)
             with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
                 outfile.write(response.content)
-
+        else:
+            _logger.debug("Meta data haven't changed for %s", file_path)
         return file_path
 
     def _get_file_path(self, epoch: Epoch, file_name: str) -> Path:
@@ -195,6 +204,7 @@ class EdiEnergyScraper:
         """
         result: Dict[Epoch, str] = {}
         for (doc_text, doc_epoch) in EdiEnergyScraper._docs_texts.items():
+            _logger.debug("searching for '%s'", doc_text)
             result[doc_epoch] = document_soup.find("a", string=re.compile(r"\s*" + doc_text + r"\s*")).attrs["href"]
         # result now looks like this:
         # { "past": "link_to_vergangene_dokumente.html", "current": "link_to_active_docs.html", "future": ...}
@@ -251,10 +261,10 @@ class EdiEnergyScraper:
         :param online_files: set, all the paths to the pdfs that were being downloaded and compared.
         :return: Set[Path], Set of Paths that were removed
         """
-
         all_files_in_mirror_dir: Set = set((self._root_dir).glob("**/*.*[!html]"))
         no_longer_online_files = all_files_in_mirror_dir.symmetric_difference(online_files)
         for path in no_longer_online_files:
+            _logger.debug("Removing %s which has been removed online", path)
             os.remove(path)
 
         return no_longer_online_files
@@ -274,10 +284,12 @@ class EdiEnergyScraper:
         index_path: Path = Path(self._root_dir, "index.html")
         with open(index_path, "w+", encoding="utf8") as outfile:
             # save the index file as html
+            _logger.info("Downloaded index.html")
             outfile.write(index_soup.prettify())
         epoch_links = EdiEnergyScraper.get_epoch_links(self._get_soup(self.get_documents_page_link(index_soup)))
         new_file_paths: Set = set()
         for epoch, epoch_link in epoch_links.items():
+            _logger.info("Processing %s", epoch)
             epoch_soup = self._get_soup(epoch_link)
             epoch_path: Path = Path(self._root_dir, f"{epoch}.html")  # e.g. "future.html"
             with open(epoch_path, "w+", encoding="utf8") as outfile:
