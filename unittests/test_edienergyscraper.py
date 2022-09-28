@@ -364,7 +364,7 @@ class TestEdiEnergyScraper:
         "./unittests/testfiles/past_20210210.html",
         "./unittests/testfiles/future_20210210.html",
     )
-    def test_mirroring(self, mocker, requests_mock, tmpdir_factory, datafiles):
+    def test_mirroring(self, mocker, requests_mock, tmpdir_factory, datafiles, caplog):
         """
         Tests the overall process and mocks most of the already tested methods.
         """
@@ -426,3 +426,4 @@ class TestEdiEnergyScraper:
             (ees_dir / "current" / "xyz.pdf"),
         }
         remove_no_longer_online_files_mocker.assert_called_once_with(test_new_file_paths)
+        assert "Downloaded index.html" in caplog.messages
