@@ -1,7 +1,7 @@
 """
 A module to scrape data from edi-energy.de.
 """
-import cgi
+import cgi  # pylint:disable=deprecated-module
 import datetime
 import io
 import logging
