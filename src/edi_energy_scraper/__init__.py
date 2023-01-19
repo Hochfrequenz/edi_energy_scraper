@@ -283,7 +283,7 @@ class EdiEnergyScraper:
             # we'll raise an error for the root dir, but create sub dirs on the fly
             raise ValueError(f"The path {self._root_dir} is either no directory or does not exist")
         for epoch in Epoch:
-            epoch_dir = self._root_dir / Path(str(epoch).lower().split(".")[1])
+            epoch_dir = self._root_dir / Path(str(epoch))
             if not epoch_dir.exists():
                 epoch_dir.mkdir(exist_ok=True)
         index_soup = self.get_index()
