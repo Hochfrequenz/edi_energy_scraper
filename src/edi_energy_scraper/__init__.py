@@ -31,6 +31,12 @@ class Epoch(str, Enum):  # pylint: disable=too-few-public-methods
     CURRENT = "current"  #: documents that are currently valid valid_from <= now < valid_to
     FUTURE = "future"  #: documents that will become valid in the future (most likely with the next format version)
 
+    def __str__(self):
+        """
+        this is required because the behaviour of "StrEnum"s changed in python 3.11
+        """
+        return self.value
+
 
 class EdiEnergyScraper:
     """
