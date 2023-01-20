@@ -19,6 +19,18 @@ class TestEdiEnergyScraper:
     A class to test the EdiEnergyScraper.
     """
 
+    @pytest.mark.parametrize(
+        "epoch,str_epoch",
+        [
+            pytest.param(Epoch.CURRENT, "current"),
+            pytest.param(Epoch.FUTURE, "future"),
+            pytest.param(Epoch.PAST, "past"),
+        ],
+    )
+    def test_epoch_stringify(self, epoch: Epoch, str_epoch: str):
+        actual = str(epoch)
+        assert actual == str_epoch
+
     def test_instantiation(self):
         """
         Tests, that the constructor works.
