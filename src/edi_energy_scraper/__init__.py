@@ -308,7 +308,7 @@ class EdiEnergyScraper:
                     file_path = self._download_and_save_pdf(epoch=epoch, file_basename=file_basename, link=link)
                 except KeyError as key_error:
                     if key_error.args[0].lower() == "content-disposition":
-                        _logger.exception(f"Failed to download {file_basename}", exc_info=True)
+                        _logger.exception("Failed to download '%s'", file_basename, exc_info=True)
                         # workaround to https://github.com/Hochfrequenz/edi_energy_scraper/issues/31
                         continue
                     raise
