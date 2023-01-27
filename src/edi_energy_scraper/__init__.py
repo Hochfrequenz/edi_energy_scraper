@@ -277,6 +277,7 @@ class EdiEnergyScraper:
 
         return no_longer_online_files
 
+    # pylint:disable=too-many-locals
     def mirror(self):
         """
         Main method of the scraper. Downloads all the files and pages and stores them in the filesystem
