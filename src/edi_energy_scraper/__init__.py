@@ -277,6 +277,7 @@ class EdiEnergyScraper:
 
         return no_longer_online_files
 
+    # pylint:disable=too-many-locals
     def mirror(self):
         """
         Main method of the scraper. Downloads all the files and pages and stores them in the filesystem
@@ -304,6 +305,13 @@ class EdiEnergyScraper:
                 outfile.write(epoch_soup.prettify())
             file_map = EdiEnergyScraper.get_epoch_file_map(epoch_soup)
             for file_basename, link in file_map.items():
-                file_path = self._download_and_save_pdf(epoch=epoch, file_basename=file_basename, link=link)
+                try:
+                    file_path = self._download_and_save_pdf(epoch=epoch, file_basename=file_basename, link=link)
+                except KeyError as key_error:
+                    if key_error.args[0].lower() == "content-disposition":
+                        _logger.exception("Failed to download '%s'", file_basename, exc_info=True)
+                        # workaround to https://github.com/Hochfrequenz/edi_energy_scraper/issues/31
+                        continue
+                    raise
                 new_file_paths.add(file_path)
         self.remove_no_longer_online_files(new_file_paths)
