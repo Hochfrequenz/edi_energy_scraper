@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from aioresponses import aioresponses
 from bs4 import BeautifulSoup
 
 from edi_energy_scraper import EdiEnergyScraper, Epoch
@@ -33,35 +34,36 @@ class TestEdiEnergyScraper:
     @pytest.mark.datafiles(
         "./unittests/testfiles/index_20210208.html",
     )
-    def test_index_retrieval(self, requests_mock, datafiles):
+    async def test_index_retrieval(self, datafiles):
         """
         Tests that the landing page is downloaded correctly
         """
         with open(datafiles / "index_20210208.html", "r", encoding="utf8") as infile:
             response_body = infile.read()
         assert "<!--" in response_body  # original response contains comments, will be removed
-        requests_mock.get("https://www.my_root_url.test", text=response_body)
-        ees = EdiEnergyScraper("https://www.my_root_url.test")
-        actual_soup = ees.get_index()
+        with aioresponses() as mock:
+            mock.get("https://www.my_root_url.test", body=response_body)
+            ees = EdiEnergyScraper("https://www.my_root_url.test")
+            actual_soup = await ees.get_index()
         actual_html = actual_soup.prettify()
         assert "<!--" not in actual_html, "comments should be ignored/removed"
         assert "Startseite: BDEW Forum Datenformate" in actual_html, "content should be returned"
 
-    def test_get_soup(self, mocker):
+    async def test_get_soup(self, mocker):
         """
-        Some of the links on edi-energy.de are relative. The call of _get_soup should automatically resolve the absolute
+        Some links on edi-energy.de are relative. The call of _get_soup should automatically resolve the absolute
         URL of a page if only the relative URL is given.
         """
         ees = EdiEnergyScraper(root_url="https://my_favourite_website.inv/")
         self.has_been_called_correctly = False  # this is not the nicest test setup but hey. it's late.
 
-        def _request_get_sideffect(*args, **kwargs):
+        async def _request_get_sideffect(*args, **kwargs):
             assert args[0] == "https://my_favourite_website.inv/some_relative_path"
             self.has_been_called_correctly = True
 
-        mocker.patch("requests.get", side_effect=_request_get_sideffect)
+        ees.requests.get = _request_get_sideffect
         try:
-            ees._get_soup(url="/some_relative_path")
+            await ees._get_soup(url="/some_relative_path")
         except AttributeError:
             pass
         assert self.has_been_called_correctly  # that's all we care for in this test.
@@ -69,15 +71,16 @@ class TestEdiEnergyScraper:
     @pytest.mark.datafiles(
         "./unittests/testfiles/index_20210208.html",
     )
-    def test_dokumente_link(self, requests_mock, datafiles):
+    async def test_dokumente_link(self, datafiles):
         """
         Tests that the "Dokumente" link is extracted from the downloaded landing page.
         """
         with open(datafiles / "index_20210208.html", "r", encoding="utf8") as infile:
             response_body = infile.read()
-        requests_mock.get("https://www.edi-energy.de", text=response_body)
-        ees = EdiEnergyScraper("https://www.edi-energy.de")
-        actual_link = ees.get_documents_page_link(ees.get_index())
+        with aioresponses() as mock:
+            mock.get("https://www.edi-energy.de", body=response_body)
+            ees = EdiEnergyScraper("https://www.edi-energy.de")
+            actual_link = ees.get_documents_page_link(await ees.get_index())
         assert actual_link == "https://www.edi-energy.de/index.php?id=38"
 
     @pytest.mark.datafiles(
@@ -168,10 +171,9 @@ class TestEdiEnergyScraper:
         "./unittests/testfiles/example_ahb.pdf",
         "./unittests/testfiles/Aenderungsantrag_EBD.xlsx",
     )
-    def test_file_download_file_does_not_exists_yet(
+    async def test_file_download_file_does_not_exists_yet(
         self,
         mocker,
-        requests_mock,
         tmpdir_factory,
         datafiles,
         file_name,
@@ -186,18 +188,19 @@ class TestEdiEnergyScraper:
         isfile_mocker = mocker.patch("edi_energy_scraper.os.path.isfile", return_value=False)
         with open(datafiles / file_name, "rb") as pdf_file:
             # Note that we do _not_ use pdf_file.read() here but provide the requests_mocker with a file handle.
-            # Otherwise you'd run into a "ValueError: Unable to determine whether fp is closed."
+            # Otherwise, you'd run into a "ValueError: Unable to determine whether fp is closed."
             # docs: https://requests-mock.readthedocs.io/en/latest/response.html?highlight=file#registering-responses
-            requests_mock.get(
-                "https://my_file_link.inv/foo_bar",
-                body=pdf_file,
-                headers={"Content-Disposition": f"attachment; filename={file_name}"},
-            )
-            ees = EdiEnergyScraper(
-                "https://my_file_link.inv/",
-                path_to_mirror_directory=ees_dir,
-            )
-            ees._download_and_save_pdf(epoch=Epoch.FUTURE, file_basename="my_favourite_ahb", link="foo_bar")
+            with aioresponses() as mock:
+                mock.get(
+                    "https://my_file_link.inv/foo_bar",
+                    body=pdf_file.read(),
+                    headers={"Content-Disposition": f"attachment; filename={file_name}"},
+                )
+                ees = EdiEnergyScraper(
+                    "https://my_file_link.inv/",
+                    path_to_mirror_directory=ees_dir,
+                )
+                await ees._download_and_save_pdf(epoch=Epoch.FUTURE, file_basename="my_favourite_ahb", link="foo_bar")
         assert (ees_dir / "future" / expected_file_name).exists()
         isfile_mocker.assert_called_once_with(ees_dir / "future" / expected_file_name)
 
@@ -217,10 +220,9 @@ class TestEdiEnergyScraper:
     @pytest.mark.datafiles(
         "./unittests/testfiles/example_ahb.pdf",
     )
-    def test_pdf_download_pdf_exists_already(
+    async def test_pdf_download_pdf_exists_already(
         self,
         mocker,
-        requests_mock,
         tmpdir_factory,
         datafiles,
         metadata_has_changed: bool,
@@ -240,18 +242,21 @@ class TestEdiEnergyScraper:
 
         with open(datafiles / "example_ahb.pdf", "rb") as pdf_file:
             # Note that we do _not_ use pdf_file.read() here but provide the requests_mocker with a file handle.
-            # Otherwise you'd run into a "ValueError: Unable to determine whether fp is closed."
+            # Otherwise, you'd run into a "ValueError: Unable to determine whether fp is closed."
             # docs: https://requests-mock.readthedocs.io/en/latest/response.html?highlight=file#registering-responses
-            requests_mock.get(
-                "https://my_file_link.inv/foo_bar.pdf",
-                body=pdf_file,
-                headers={"Content-Disposition": 'attachment; filename="example_ahb.pdf"'},
-            )
-            ees = EdiEnergyScraper(
-                "https://my_file_link.inv/",
-                path_to_mirror_directory=ees_dir,
-            )
-            ees._download_and_save_pdf(epoch=Epoch.FUTURE, file_basename="my_favourite_ahb", link="foo_bar.pdf")
+            with aioresponses() as mock:
+                mock.get(
+                    "https://my_file_link.inv/foo_bar.pdf",
+                    body=pdf_file.read(),
+                    headers={"Content-Disposition": 'attachment; filename="example_ahb.pdf"'},
+                )
+                ees = EdiEnergyScraper(
+                    "https://my_file_link.inv/",
+                    path_to_mirror_directory=ees_dir,
+                )
+                await ees._download_and_save_pdf(
+                    epoch=Epoch.FUTURE, file_basename="my_favourite_ahb", link="foo_bar.pdf"
+                )
         assert (ees_dir / "future/my_favourite_ahb.pdf").exists() == metadata_has_changed
         isfile_mocker.assert_called_once_with(ees_dir / "future/my_favourite_ahb.pdf")
         metadata_mocker.assert_called_once()
@@ -365,7 +370,7 @@ class TestEdiEnergyScraper:
         "./unittests/testfiles/past_20210210.html",
         "./unittests/testfiles/future_20210210.html",
     )
-    def test_mirroring(self, mocker, requests_mock, tmpdir_factory, datafiles, caplog):
+    async def test_mirroring(self, mocker, tmpdir_factory, datafiles, caplog):
         """
         Tests the overall process and mocks most of the already tested methods.
         """
@@ -377,42 +382,43 @@ class TestEdiEnergyScraper:
         remove_no_longer_online_files_mocker = mocker.patch(
             "edi_energy_scraper.EdiEnergyScraper.remove_no_longer_online_files"
         )
+        mocker.patch(
+            "edi_energy_scraper.EdiEnergyScraper.get_epoch_links",
+            return_value={
+                "current": "current.html",
+                "future": "future.html",
+                "past": "past.html",
+            },
+        )
+        mocker.patch(
+            "edi_energy_scraper.EdiEnergyScraper._get_soup",
+            side_effect=TestEdiEnergyScraper._get_soup_mocker,
+        )
+        mocker.patch(
+            "edi_energy_scraper.EdiEnergyScraper.get_epoch_file_map",
+            side_effect=TestEdiEnergyScraper._get_efm_mocker,
+        )
         with open(datafiles / "example_ahb.pdf", "rb") as pdf_file_current, open(
             datafiles / "Aenderungsantrag_EBD.xlsx", "rb"
         ) as file_future, open(datafiles / "example_ahb.pdf", "rb") as file_past:
-            requests_mock.get(
-                "https://www.edi-energy.de/a_future_ahb.xlsx",
-                body=file_future,
-                headers={"Content-Disposition": 'attachment; filename="Aenderungsantrag_EBD.xlsx"'},
-            )
-            requests_mock.get(
-                "https://www.edi-energy.de/a_current_ahb.pdf",
-                body=pdf_file_current,
-                headers={"Content-Disposition": 'attachment; filename="example_ahb.pdf"'},
-            )
-            requests_mock.get(
-                "https://www.edi-energy.de/a_past_ahb.pdf",
-                body=file_past,
-                headers={"Content-Disposition": 'attachment; filename="example_ahb.pdf"'},
-            )
-            mocker.patch(
-                "edi_energy_scraper.EdiEnergyScraper.get_epoch_links",
-                return_value={
-                    "current": "current.html",
-                    "future": "future.html",
-                    "past": "past.html",
-                },
-            )
-            mocker.patch(
-                "edi_energy_scraper.EdiEnergyScraper._get_soup",
-                side_effect=TestEdiEnergyScraper._get_soup_mocker,
-            )
-            mocker.patch(
-                "edi_energy_scraper.EdiEnergyScraper.get_epoch_file_map",
-                side_effect=TestEdiEnergyScraper._get_efm_mocker,
-            )
-            ees = EdiEnergyScraper(path_to_mirror_directory=ees_dir)
-            ees.mirror()
+            with aioresponses() as mock:
+                mock.get(
+                    "https://www.edi-energy.de/a_future_ahb.xlsx",
+                    body=file_future.read(),
+                    headers={"Content-Disposition": 'attachment; filename="Aenderungsantrag_EBD.xlsx"'},
+                )
+                mock.get(
+                    "https://www.edi-energy.de/a_current_ahb.pdf",
+                    body=pdf_file_current.read(),
+                    headers={"Content-Disposition": 'attachment; filename="example_ahb.pdf"'},
+                )
+                mock.get(
+                    "https://www.edi-energy.de/a_past_ahb.pdf",
+                    body=file_past.read(),
+                    headers={"Content-Disposition": 'attachment; filename="example_ahb.pdf"'},
+                )
+                ees = EdiEnergyScraper(path_to_mirror_directory=ees_dir)
+                await ees.mirror()
         assert (ees_dir / "index.html").exists()
         assert (ees_dir / "future.html").exists()
         assert (ees_dir / "current.html").exists()
