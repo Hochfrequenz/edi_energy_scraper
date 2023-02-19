@@ -105,7 +105,7 @@ class EdiEnergyScraper:
                         "Too many timeouts while downloading '%s' (%s)", link, file_basename, exc_info=True
                     )
                     raise
-                await asyncio.sleep(delay=randint(8,16))  # cool down...
+                await asyncio.sleep(delay=randint(8, 16))  # cool down...
         file_name = EdiEnergyScraper._add_file_extension_to_file_basename(
             headers=response.headers, file_basename=file_basename
         )
@@ -119,7 +119,7 @@ class EdiEnergyScraper:
                 _logger.exception("Timeout while reading content of '%s'", file_name, exc_info=True)
                 if number_of_tries <= 0:
                     raise
-                await asyncio.sleep(delay=randint(5,10))  # cool down...
+                await asyncio.sleep(delay=randint(5, 10))  # cool down...
         # Save file if it does not exist yet
         if not os.path.isfile(file_path):
             with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
