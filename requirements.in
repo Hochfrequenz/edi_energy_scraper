@@ -2,3 +2,4 @@ beautifulsoup4
 pypdf
 aiohttp
 aiohttp_requests
+cython # https://github.com/PyYoshi/cChardet/issues/81#issuecomment-1411996589
