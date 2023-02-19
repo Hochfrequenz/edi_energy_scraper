@@ -1,5 +1,5 @@
 beautifulsoup4
 pypdf
+cython # https://github.com/PyYoshi/cChardet/issues/81#issuecomment-1411996589
 aiohttp
 aiohttp_requests
-cython # https://github.com/PyYoshi/cChardet/issues/81#issuecomment-1411996589
