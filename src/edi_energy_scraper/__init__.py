@@ -100,7 +100,9 @@ class EdiEnergyScraper:
             except (asyncio.TimeoutError, ServerDisconnectedError):
                 _logger.warning("Timeout while downloading '%s' (%s)", link, file_basename)
                 if number_of_tries <= 0:
-                    _logger.exception("Too many timeouts while downloading '%s' (%s)", link, file_basename, exc_info=True)
+                    _logger.exception(
+                        "Too many timeouts while downloading '%s' (%s)", link, file_basename, exc_info=True
+                    )
                     raise
                 await asyncio.sleep(delay=10)  # cool down...
         file_name = EdiEnergyScraper._add_file_extension_to_file_basename(
@@ -297,7 +299,9 @@ class EdiEnergyScraper:
 
         return no_longer_online_files
 
-    async def _download(self, epoch: Epoch, file_basename: str, link: str, optional_success_msg:Optional[str]=None) -> Optional[Path]:
+    async def _download(
+        self, epoch: Epoch, file_basename: str, link: str, optional_success_msg: Optional[str] = None
+    ) -> Optional[Path]:
         try:
             file_path = await self._download_and_save_pdf(epoch=epoch, file_basename=file_basename, link=link)
             if optional_success_msg is not None:
@@ -340,7 +344,14 @@ class EdiEnergyScraper:
             download_tasks: list[Awaitable[Optional[Path]]] = []
             file_counter = itertools.count()
             for file_basename, link in file_map.items():
-                download_tasks.append(self._download(epoch, file_basename, link, f"Successfully downloaded {epoch} file {next(file_counter)}/{len(file_map)}"))
+                download_tasks.append(
+                    self._download(
+                        epoch,
+                        file_basename,
+                        link,
+                        f"Successfully downloaded {epoch} file {next(file_counter)}/{len(file_map)}",
+                    )
+                )
             download_results: list[Optional[Path]] = await asyncio.gather(*download_tasks)
             for download_result in download_results:
                 if download_result is not None:
