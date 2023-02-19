@@ -43,9 +43,12 @@ Then import it and start the download:
 
 ```python
 import asyncio
-
 from edi_energy_scraper import EdiEnergyScraper
 
+# add the following lines to enable debug logging to stdout (CLI)
+# import logging
+# import sys
+# logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 async def mirror():
     scraper = EdiEnergyScraper(path_to_mirror_directory="edi_energy_de")
