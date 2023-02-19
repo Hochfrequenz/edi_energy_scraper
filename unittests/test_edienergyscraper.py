@@ -1,17 +1,9 @@
-import time
 from pathlib import Path
 
 import pytest
 from bs4 import BeautifulSoup
 
 from edi_energy_scraper import EdiEnergyScraper, Epoch
-
-
-def fast_waiter():
-    """
-    A helper method to prevent actual DOS waiting (up to 3 seconds per call.)
-    """
-    time.sleep(0)
 
 
 class TestEdiEnergyScraper:
@@ -49,7 +41,7 @@ class TestEdiEnergyScraper:
             response_body = infile.read()
         assert "<!--" in response_body  # original response contains comments, will be removed
         requests_mock.get("https://www.my_root_url.test", text=response_body)
-        ees = EdiEnergyScraper("https://www.my_root_url.test", dos_waiter=fast_waiter)
+        ees = EdiEnergyScraper("https://www.my_root_url.test")
         actual_soup = ees.get_index()
         actual_html = actual_soup.prettify()
         assert "<!--" not in actual_html, "comments should be ignored/removed"
@@ -60,7 +52,7 @@ class TestEdiEnergyScraper:
         Some of the links on edi-energy.de are relative. The call of _get_soup should automatically resolve the absolute
         URL of a page if only the relative URL is given.
         """
-        ees = EdiEnergyScraper(root_url="https://my_favourite_website.inv/", dos_waiter=fast_waiter)
+        ees = EdiEnergyScraper(root_url="https://my_favourite_website.inv/")
         self.has_been_called_correctly = False  # this is not the nicest test setup but hey. it's late.
 
         def _request_get_sideffect(*args, **kwargs):
@@ -84,7 +76,7 @@ class TestEdiEnergyScraper:
         with open(datafiles / "index_20210208.html", "r", encoding="utf8") as infile:
             response_body = infile.read()
         requests_mock.get("https://www.edi-energy.de", text=response_body)
-        ees = EdiEnergyScraper("https://www.edi-energy.de", dos_waiter=fast_waiter)
+        ees = EdiEnergyScraper("https://www.edi-energy.de")
         actual_link = ees.get_documents_page_link(ees.get_index())
         assert actual_link == "https://www.edi-energy.de/index.php?id=38"
 
@@ -203,7 +195,6 @@ class TestEdiEnergyScraper:
             )
             ees = EdiEnergyScraper(
                 "https://my_file_link.inv/",
-                dos_waiter=fast_waiter,
                 path_to_mirror_directory=ees_dir,
             )
             ees._download_and_save_pdf(epoch=Epoch.FUTURE, file_basename="my_favourite_ahb", link="foo_bar")
@@ -258,7 +249,6 @@ class TestEdiEnergyScraper:
             )
             ees = EdiEnergyScraper(
                 "https://my_file_link.inv/",
-                dos_waiter=fast_waiter,
                 path_to_mirror_directory=ees_dir,
             )
             ees._download_and_save_pdf(epoch=Epoch.FUTURE, file_basename="my_favourite_ahb", link="foo_bar.pdf")
@@ -323,7 +313,6 @@ class TestEdiEnergyScraper:
     def test_remove_no_longer_online_files(self, mocker):
         """Tests function remove_no_longer_online_files."""
         ees = EdiEnergyScraper(
-            dos_waiter=fast_waiter,
             path_to_mirror_directory=Path("unittests/testfiles/removetest"),
         )
         assert (
@@ -422,7 +411,7 @@ class TestEdiEnergyScraper:
                 "edi_energy_scraper.EdiEnergyScraper.get_epoch_file_map",
                 side_effect=TestEdiEnergyScraper._get_efm_mocker,
             )
-            ees = EdiEnergyScraper(dos_waiter=fast_waiter, path_to_mirror_directory=ees_dir)
+            ees = EdiEnergyScraper(path_to_mirror_directory=ees_dir)
             ees.mirror()
         assert (ees_dir / "index.html").exists()
         assert (ees_dir / "future.html").exists()

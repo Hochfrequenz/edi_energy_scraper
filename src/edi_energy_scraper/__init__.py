@@ -11,9 +11,7 @@ import os
 import re
 from enum import Enum
 from pathlib import Path
-from random import randint
-from time import sleep
-from typing import Callable, Dict, Set, Union
+from typing import Dict, Set, Union
 
 import requests
 from bs4 import BeautifulSoup, Comment  # type:ignore[import]
@@ -52,7 +50,6 @@ class EdiEnergyScraper:
         root_url: str = "https://www.edi-energy.de",
         path_to_mirror_directory: Union[Path, str] = Path("edi_energy_de"),
         # HTML and PDF files will be stored relative to this
-        dos_waiter: Callable = lambda: sleep(randint(1, 10)),
     ):
         """
         Initialize the Scaper by providing the URL, a path to save the files to and a function that prevents DOS.
@@ -65,7 +62,6 @@ class EdiEnergyScraper:
             self._root_dir = Path(path_to_mirror_directory)
         else:
             self._root_dir = path_to_mirror_directory
-        self._dos_waiter = dos_waiter
 
     def _get_soup(self, url: str) -> BeautifulSoup:
         """
@@ -76,7 +72,6 @@ class EdiEnergyScraper:
         response = requests.get(url, timeout=5)
         soup = BeautifulSoup(response.content, "html.parser")
         EdiEnergyScraper.remove_comments(soup)
-        self._dos_waiter()  # <-- DOS protection, usually a blocking method (e.g. time.sleep(...))
         return soup
 
     def _download_and_save_pdf(self, epoch: Epoch, file_basename: str, link: str) -> Path:

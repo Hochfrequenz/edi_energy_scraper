@@ -67,17 +67,6 @@ This creates a directory structure:
         |- ...
 ```
 
-To prevent a DOS, by default the script waits a random time in between 1 and 10 seconds between each file download. You can override this behaviour
-by providing your own "slow down" method:
-
-```python
-from edi_energy_scraper import EdiEnergyScraper
-from time import sleep
-
-scraper = EdiEnergyScraper(path_to_mirror_directory="edi_energy_de",
-                           dos_waiter=lambda: sleep(0))  # disable DOS protection
-```
-
 ## How to use this Repository on Your Machine (for development)
 
 Please follow the instructions in
