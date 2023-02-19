@@ -92,12 +92,14 @@ class EdiEnergyScraper:
             link = f"{self._root_url}/{link.strip('/')}"  # remove trailing slashes from relative link
 
         _logger.debug("Download %s", link)
-        while True:
+        for number_of_tries in range(4, 0, -1):
             try:
                 response = await self.requests.get(link, timeout=self.timeout)
                 break
             except asyncio.TimeoutError:
-                _logger.exception("Timeout while downloading '%s'. Sleeping thread for 10s", link, exc_info=True)
+                _logger.exception("Timeout while downloading '%s'", link, exc_info=True)
+                if number_of_tries <= 0:
+                    raise
                 await asyncio.sleep(delay=10)  # cool down...
         file_name = EdiEnergyScraper._add_file_extension_to_file_basename(
             headers=response.headers, file_basename=file_basename
