@@ -1,6 +1,7 @@
 """
 A module to scrape data from edi-energy.de.
 """
+import asyncio
 import cgi  # pylint:disable=deprecated-module
 
 # https://github.com/Hochfrequenz/edi_energy_scraper/issues/28
@@ -11,12 +12,12 @@ import os
 import re
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Set, Union
+from typing import Awaitable, Dict, Optional, Set, Union
 
-import requests
+import aiohttp
+from aiohttp_requests import Requests  # type:ignore[import]
 from bs4 import BeautifulSoup, Comment  # type:ignore[import]
-from pypdf import PdfReader  # type:ignore[import]
-from requests.models import CaseInsensitiveDict
+from pypdf import PdfReader
 
 _logger = logging.getLogger("edi_energy_scraper")
 _logger.setLevel(logging.DEBUG)
@@ -50,6 +51,7 @@ class EdiEnergyScraper:
         root_url: str = "https://www.edi-energy.de",
         path_to_mirror_directory: Union[Path, str] = Path("edi_energy_de"),
         # HTML and PDF files will be stored relative to this
+        connection_limit: int = 3,  # using trial and error this was found as a good value to not get blocked
     ):
         """
         Initialize the Scaper by providing the URL, a path to save the files to and a function that prevents DOS.
@@ -62,19 +64,24 @@ class EdiEnergyScraper:
             self._root_dir = Path(path_to_mirror_directory)
         else:
             self._root_dir = path_to_mirror_directory
+        self.timeout = aiohttp.ClientTimeout(total=60 * 3)  # 3min
+        self.tcp_connector = aiohttp.TCPConnector(
+            limit_per_host=connection_limit,
+        )
+        self.requests = Requests(connector=self.tcp_connector)
 
-    def _get_soup(self, url: str) -> BeautifulSoup:
+    async def _get_soup(self, url: str) -> BeautifulSoup:
         """
         Downloads the given absolute URL, parses it as html, removes the comments and returns the soup.
         """
         if not url.startswith("http"):
             url = f"{self._root_url}/{url.strip('/')}"  # remove trailing slashes from relative link
-        response = requests.get(url, timeout=5)
-        soup = BeautifulSoup(response.content, "html.parser")
+        response = await self.requests.get(url, timeout=5)
+        soup = BeautifulSoup(await response.text(), "html.parser")
         EdiEnergyScraper.remove_comments(soup)
         return soup
 
-    def _download_and_save_pdf(self, epoch: Epoch, file_basename: str, link: str) -> Path:
+    async def _download_and_save_pdf(self, epoch: Epoch, file_basename: str, link: str) -> Path:
         """
         Downloads a PDF file from a given link and stores it under the file name in a folder that has the same name
         as the directory, if the pdf does not exist yet or if the metadata has changed since the last download.
@@ -85,35 +92,43 @@ class EdiEnergyScraper:
             link = f"{self._root_url}/{link.strip('/')}"  # remove trailing slashes from relative link
 
         _logger.debug("Download %s", link)
-        response = requests.get(link, timeout=5)
-
+        for number_of_tries in range(4, 0, -1):
+            try:
+                response = await self.requests.get(link, timeout=self.timeout)
+                break
+            except asyncio.TimeoutError:
+                _logger.exception("Timeout while downloading '%s'", link, exc_info=True)
+                if number_of_tries <= 0:
+                    raise
+                await asyncio.sleep(delay=10)  # cool down...
         file_name = EdiEnergyScraper._add_file_extension_to_file_basename(
             headers=response.headers, file_basename=file_basename
         )
 
         file_path = self._get_file_path(file_name=file_name, epoch=epoch)
 
+        response_content = await response.content.read()
         # Save file if it does not exist yet
         if not os.path.isfile(file_path):
             with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
                 _logger.debug("Saving new PDF %s", file_path)
-                outfile.write(response.content)
+                outfile.write(response_content)
             return file_path
 
         # First fix, different file types do just the same as before, only with correct file extension
         if not file_name.endswith(".pdf"):
             with open(file_path, "wb+") as outfile:
                 _logger.debug("Saving %s", file_path)
-                outfile.write(response.content)
+                outfile.write(response_content)
             return file_path
 
         # Check if metadata has changed
-        metadata_has_changed = self._have_different_metadata(response.content, file_path)
+        metadata_has_changed = self._have_different_metadata(response_content, file_path)
         if metadata_has_changed:  # delete old file and replace with new one
             _logger.debug("Metadata for PDF %s changed; Replacing it", file_path)
             os.remove(file_path)
             with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
-                outfile.write(response.content)
+                outfile.write(response_content)
         else:
             _logger.debug("Meta data haven't changed for %s", file_path)
         return file_path
@@ -128,7 +143,7 @@ class EdiEnergyScraper:
         return file_path
 
     @staticmethod
-    def _add_file_extension_to_file_basename(headers: CaseInsensitiveDict, file_basename: str) -> str:
+    def _add_file_extension_to_file_basename(headers: dict, file_basename: str) -> str:
         """Extracts the extension of a file from a response header and add it to the file basename."""
         content_disposition = headers["Content-Disposition"]
         _, params = cgi.parse_header(content_disposition)
@@ -161,12 +176,12 @@ class EdiEnergyScraper:
 
         return metadata_has_changed
 
-    def get_index(self) -> BeautifulSoup:
+    async def get_index(self) -> BeautifulSoup:
         """
         Downloads the root url and returns the soup.
         """
         # As the landing page is usually called "index.html/php/..." this method is named index.
-        return self._get_soup(self._root_url)
+        return await self._get_soup(self._root_url)
 
     @staticmethod
     def remove_comments(soup):
@@ -272,8 +287,19 @@ class EdiEnergyScraper:
 
         return no_longer_online_files
 
+    async def _download(self, epoch: Epoch, file_basename: str, link: str) -> Optional[Path]:
+        try:
+            file_path = await self._download_and_save_pdf(epoch=epoch, file_basename=file_basename, link=link)
+        except KeyError as key_error:
+            if key_error.args[0].lower() == "content-disposition":
+                _logger.exception("Failed to download '%s'", file_basename, exc_info=True)
+                # workaround to https://github.com/Hochfrequenz/edi_energy_scraper/issues/31
+                return None
+            raise
+        return file_path
+
     # pylint:disable=too-many-locals
-    def mirror(self):
+    async def mirror(self):
         """
         Main method of the scraper. Downloads all the files and pages and stores them in the filesystem
         """
@@ -284,29 +310,26 @@ class EdiEnergyScraper:
             epoch_dir = self._root_dir / Path(str(epoch))
             if not epoch_dir.exists():
                 epoch_dir.mkdir(exist_ok=True)
-        index_soup = self.get_index()
+        index_soup = await self.get_index()
         index_path: Path = Path(self._root_dir, "index.html")
         with open(index_path, "w+", encoding="utf8") as outfile:
             # save the index file as html
             _logger.info("Downloaded index.html")
             outfile.write(index_soup.prettify())
-        epoch_links = EdiEnergyScraper.get_epoch_links(self._get_soup(self.get_documents_page_link(index_soup)))
-        new_file_paths: Set = set()
+        epoch_links = EdiEnergyScraper.get_epoch_links(await self._get_soup(self.get_documents_page_link(index_soup)))
+        new_file_paths: Set[Path] = set()
         for epoch, epoch_link in epoch_links.items():
             _logger.info("Processing %s", epoch)
-            epoch_soup = self._get_soup(epoch_link)
+            epoch_soup = await self._get_soup(epoch_link)
             epoch_path: Path = Path(self._root_dir, f"{epoch}.html")  # e.g. "future.html"
             with open(epoch_path, "w+", encoding="utf8") as outfile:
                 outfile.write(epoch_soup.prettify())
             file_map = EdiEnergyScraper.get_epoch_file_map(epoch_soup)
+            download_tasks: list[Awaitable[Optional[Path]]] = []
             for file_basename, link in file_map.items():
-                try:
-                    file_path = self._download_and_save_pdf(epoch=epoch, file_basename=file_basename, link=link)
-                except KeyError as key_error:
-                    if key_error.args[0].lower() == "content-disposition":
-                        _logger.exception("Failed to download '%s'", file_basename, exc_info=True)
-                        # workaround to https://github.com/Hochfrequenz/edi_energy_scraper/issues/31
-                        continue
-                    raise
-                new_file_paths.add(file_path)
+                download_tasks.append(self._download(epoch, file_basename, link))
+            download_results: list[Optional[Path]] = await asyncio.gather(*download_tasks)
+            for download_result in download_results:
+                if download_result is not None:
+                    new_file_paths.add(download_result)
         self.remove_no_longer_online_files(new_file_paths)
