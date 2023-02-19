@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Awaitable, Dict, Optional, Set, Union
 
 import aiohttp
+from aiohttp import ServerDisconnectedError
 from aiohttp_requests import Requests  # type:ignore[import]
 from bs4 import BeautifulSoup, Comment  # type:ignore[import]
 from pypdf import PdfReader
@@ -92,11 +93,11 @@ class EdiEnergyScraper:
             link = f"{self._root_url}/{link.strip('/')}"  # remove trailing slashes from relative link
 
         _logger.debug("Download %s", link)
-        for number_of_tries in range(4, 0, -1):
+        for number_of_tries in range(5, 0, -1):
             try:
                 response = await self.requests.get(link, timeout=self.timeout)
                 break
-            except asyncio.TimeoutError:
+            except (asyncio.TimeoutError, ServerDisconnectedError):
                 _logger.exception("Timeout while downloading '%s'", link, exc_info=True)
                 if number_of_tries <= 0:
                     raise
@@ -106,8 +107,15 @@ class EdiEnergyScraper:
         )
 
         file_path = self._get_file_path(file_name=file_name, epoch=epoch)
-
-        response_content = await response.content.read()
+        for number_of_tries in range(4, 0, -1):
+            try:
+                response_content = await response.content.read()
+                break
+            except asyncio.TimeoutError:
+                _logger.exception("Timeout while reading content of '%s'", file_name, exc_info=True)
+                if number_of_tries <= 0:
+                    raise
+                await asyncio.sleep(delay=10)  # cool down...
         # Save file if it does not exist yet
         if not os.path.isfile(file_path):
             with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
