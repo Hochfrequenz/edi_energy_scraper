@@ -7,14 +7,17 @@ import cgi  # pylint:disable=deprecated-module
 # https://github.com/Hochfrequenz/edi_energy_scraper/issues/28
 import datetime
 import io
+import itertools
 import logging
 import os
 import re
 from enum import Enum
 from pathlib import Path
+from random import randint
 from typing import Awaitable, Dict, Optional, Set, Union
 
 import aiohttp
+from aiohttp import ServerDisconnectedError
 from aiohttp_requests import Requests  # type:ignore[import]
 from bs4 import BeautifulSoup, Comment  # type:ignore[import]
 from pypdf import PdfReader
@@ -64,7 +67,7 @@ class EdiEnergyScraper:
             self._root_dir = Path(path_to_mirror_directory)
         else:
             self._root_dir = path_to_mirror_directory
-        self.timeout = aiohttp.ClientTimeout(total=60 * 3)  # 3min
+        self.timeout = aiohttp.ClientTimeout(total=60 * 15)  # 15min per epoch (1 asyncio.gather)
         self.tcp_connector = aiohttp.TCPConnector(
             limit_per_host=connection_limit,
         )
@@ -87,27 +90,36 @@ class EdiEnergyScraper:
         as the directory, if the pdf does not exist yet or if the metadata has changed since the last download.
         Returns the path to the downloaded pdf.
         """
-
         if not link.startswith("http"):
             link = f"{self._root_url}/{link.strip('/')}"  # remove trailing slashes from relative link
 
         _logger.debug("Download %s", link)
-        for number_of_tries in range(4, 0, -1):
+        for number_of_tries in range(5, 0, -1):
             try:
                 response = await self.requests.get(link, timeout=self.timeout)
                 break
-            except asyncio.TimeoutError:
-                _logger.exception("Timeout while downloading '%s'", link, exc_info=True)
+            except (asyncio.TimeoutError, ServerDisconnectedError):
+                _logger.warning("Timeout while downloading '%s' (%s)", link, file_basename)
                 if number_of_tries <= 0:
+                    _logger.exception(
+                        "Too many timeouts while downloading '%s' (%s)", link, file_basename, exc_info=True
+                    )
                     raise
-                await asyncio.sleep(delay=10)  # cool down...
+                await asyncio.sleep(delay=randint(8, 16))  # cool down...
         file_name = EdiEnergyScraper._add_file_extension_to_file_basename(
             headers=response.headers, file_basename=file_basename
         )
 
         file_path = self._get_file_path(file_name=file_name, epoch=epoch)
-
-        response_content = await response.content.read()
+        for number_of_tries in range(4, 0, -1):
+            try:
+                response_content = await response.content.read()
+                break
+            except asyncio.TimeoutError:
+                _logger.exception("Timeout while reading content of '%s'", file_name, exc_info=True)
+                if number_of_tries <= 0:
+                    raise
+                await asyncio.sleep(delay=randint(5, 10))  # cool down...
         # Save file if it does not exist yet
         if not os.path.isfile(file_path):
             with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
@@ -279,7 +291,8 @@ class EdiEnergyScraper:
         :param online_files: set, all the paths to the pdfs that were being downloaded and compared.
         :return: Set[Path], Set of Paths that were removed
         """
-        all_files_in_mirror_dir: Set = set((self._root_dir).glob("**/*.*[!html]"))
+        _logger.info("Removing outdated files")
+        all_files_in_mirror_dir: Set = set(self._root_dir.glob("**/*.*[!html]"))
         no_longer_online_files = all_files_in_mirror_dir.symmetric_difference(online_files)
         for path in no_longer_online_files:
             _logger.debug("Removing %s which has been removed online", path)
@@ -287,9 +300,13 @@ class EdiEnergyScraper:
 
         return no_longer_online_files
 
-    async def _download(self, epoch: Epoch, file_basename: str, link: str) -> Optional[Path]:
+    async def _download(
+        self, epoch: Epoch, file_basename: str, link: str, optional_success_msg: Optional[str] = None
+    ) -> Optional[Path]:
         try:
             file_path = await self._download_and_save_pdf(epoch=epoch, file_basename=file_basename, link=link)
+            if optional_success_msg is not None:
+                _logger.debug(optional_success_msg)
         except KeyError as key_error:
             if key_error.args[0].lower() == "content-disposition":
                 _logger.exception("Failed to download '%s'", file_basename, exc_info=True)
@@ -326,10 +343,19 @@ class EdiEnergyScraper:
                 outfile.write(epoch_soup.prettify())
             file_map = EdiEnergyScraper.get_epoch_file_map(epoch_soup)
             download_tasks: list[Awaitable[Optional[Path]]] = []
+            file_counter = itertools.count()
             for file_basename, link in file_map.items():
-                download_tasks.append(self._download(epoch, file_basename, link))
+                download_tasks.append(
+                    self._download(
+                        epoch,
+                        file_basename,
+                        link,
+                        f"Successfully downloaded {epoch} file {next(file_counter)}/{len(file_map)}",
+                    )
+                )
             download_results: list[Optional[Path]] = await asyncio.gather(*download_tasks)
             for download_result in download_results:
                 if download_result is not None:
                     new_file_paths.add(download_result)
         self.remove_no_longer_online_files(new_file_paths)
+        _logger.info("Finished mirroring")

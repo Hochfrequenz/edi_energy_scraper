@@ -21,7 +21,8 @@ This repository helps you with the latter. It allows you to create an up-to-date
 computer. Other than if you mirrored the files using `wget` or `curl`, you'll get a clean and intuitive directory
 structure.
 
-From there you can e.g. commit the files into a VCS, scrape the PDF/Word files for later use...
+
+From there you can e.g. commit the files into a VCS (like e.g. our [edi_energy_mirror](https://github.com/Hochfrequenz/edi_energy_mirror)), scrape the PDF/Word files for later use...
 
 We're all hoping for the day of true digitization on which this repository will become obsolete.
 
@@ -43,9 +44,12 @@ Then import it and start the download:
 
 ```python
 import asyncio
-
 from edi_energy_scraper import EdiEnergyScraper
 
+# add the following lines to enable debug logging to stdout (CLI)
+# import logging
+# import sys
+# logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 async def mirror():
     scraper = EdiEnergyScraper(path_to_mirror_directory="edi_energy_de")
@@ -53,8 +57,10 @@ async def mirror():
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(mirror())
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    asyncio.run(mirror())
+
 ```
 
 This creates a directory structure:
