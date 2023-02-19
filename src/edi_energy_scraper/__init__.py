@@ -184,7 +184,7 @@ class EdiEnergyScraper:
                 return True
             pdf_old_metadata = pdf_old.metadata
 
-        metadata_has_changed: bool = pdf_new_metadata == pdf_old_metadata
+        metadata_has_changed: bool = pdf_new_metadata != pdf_old_metadata
 
         return metadata_has_changed
 
