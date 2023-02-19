@@ -17,7 +17,7 @@ from typing import Callable, Dict, Set, Union
 
 import requests
 from bs4 import BeautifulSoup, Comment  # type:ignore[import]
-from PyPDF2 import PdfReader  # type:ignore[import]
+from pypdf import PdfReader  # type:ignore[import]
 from requests.models import CaseInsensitiveDict
 
 _logger = logging.getLogger("edi_energy_scraper")
