@@ -21,7 +21,8 @@ This repository helps you with the latter. It allows you to create an up-to-date
 computer. Other than if you mirrored the files using `wget` or `curl`, you'll get a clean and intuitive directory
 structure.
 
-From there you can e.g. commit the files into a VCS, scrape the PDF/Word files for later use...
+
+From there you can e.g. commit the files into a VCS (like e.g. our [edi_energy_mirror](https://github.com/Hochfrequenz/edi_energy_mirror)), scrape the PDF/Word files for later use...
 
 We're all hoping for the day of true digitization on which this repository will become obsolete.
 
