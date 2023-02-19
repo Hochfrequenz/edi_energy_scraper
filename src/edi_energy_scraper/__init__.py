@@ -178,7 +178,7 @@ class EdiEnergyScraper:
         """
         Removes thes HTML comments from the given soup.
         """
-        for html_comment in soup.findAll(text=lambda text: isinstance(text, Comment)):
+        for html_comment in soup.findAll(string=lambda text: isinstance(text, Comment)):
             html_comment.extract()
 
     def get_documents_page_link(self, index_soup) -> str:
