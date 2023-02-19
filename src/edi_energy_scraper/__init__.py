@@ -65,7 +65,7 @@ class EdiEnergyScraper:
             self._root_dir = Path(path_to_mirror_directory)
         else:
             self._root_dir = path_to_mirror_directory
-        self.timeout = aiohttp.ClientTimeout(total=60 * 3)  # 3min
+        self.timeout = aiohttp.ClientTimeout(total=60 * 15)  # 15min
         self.tcp_connector = aiohttp.TCPConnector(
             limit_per_host=connection_limit,
         )
