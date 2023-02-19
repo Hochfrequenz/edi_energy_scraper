@@ -32,7 +32,7 @@ multidict==6.0.4
     # via
     #   aiohttp
     #   yarl
-pypdf2==3.0.1
+pypdf==3.4.1
     # via -r requirements.in
 requests==2.28.2
     # via -r requirements.in
