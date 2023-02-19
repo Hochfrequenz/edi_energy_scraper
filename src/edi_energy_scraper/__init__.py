@@ -77,7 +77,7 @@ class EdiEnergyScraper:
         if not url.startswith("http"):
             url = f"{self._root_url}/{url.strip('/')}"  # remove trailing slashes from relative link
         response = await self.requests.get(url, timeout=5)
-        soup = BeautifulSoup(await response.content.read(), "html.parser")
+        soup = BeautifulSoup(await response.text(), "html.parser")
         EdiEnergyScraper.remove_comments(soup)
         return soup
 
