@@ -308,12 +308,12 @@ class TestEdiEnergyScraper:
         # Test that metadata of the same pdf returns same metadata
         with open(test_file, "rb") as same_pdf:
             has_changed = EdiEnergyScraper._have_different_metadata(same_pdf.read(), test_file)
-            assert has_changed
+            assert not has_changed
 
-        # Test that metadata of the a different pdf returns different metadata
+        # Test that metadata of a different pdf returns different metadata
         with open(datafiles / "example_ahb_2.pdf", "rb") as different_pdf:
             has_changed = EdiEnergyScraper._have_different_metadata(different_pdf.read(), test_file)
-            assert not has_changed
+            assert has_changed
 
     def test_remove_no_longer_online_files(self, mocker):
         """Tests function remove_no_longer_online_files."""
