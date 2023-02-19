@@ -211,7 +211,7 @@ class EdiEnergyScraper:
         from the "Dokumente" sub page soup.
         """
         result: Dict[Epoch, str] = {}
-        for (doc_text, doc_epoch) in EdiEnergyScraper._docs_texts.items():
+        for doc_text, doc_epoch in EdiEnergyScraper._docs_texts.items():
             _logger.debug("searching for '%s'", doc_text)
             result[doc_epoch] = document_soup.find("a", string=re.compile(r"\s*" + doc_text + r"\s*")).attrs["href"]
         # result now looks like this:
