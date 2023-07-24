@@ -2,3 +2,4 @@ beautifulsoup4
 pypdf
 aiohttp
 aiohttp_requests
+cython>=3.0.0
