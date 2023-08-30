@@ -2,7 +2,7 @@
 A module to scrape data from edi-energy.de.
 """
 import asyncio
-import cgi  # pylint:disable=deprecated-module
+import cgi
 
 # https://github.com/Hochfrequenz/edi_energy_scraper/issues/28
 import datetime
