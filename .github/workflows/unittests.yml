@@ -10,7 +10,7 @@ jobs:
         # For 3.11 see https://github.com/Hochfrequenz/edi_energy_scraper/issues/40
         os: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
