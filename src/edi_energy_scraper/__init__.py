@@ -2,7 +2,6 @@
 A module to scrape data from edi-energy.de.
 """
 import asyncio
-import cgi  # pylint:disable=deprecated-module
 
 # https://github.com/Hochfrequenz/edi_energy_scraper/issues/28
 import datetime
@@ -11,6 +10,7 @@ import itertools
 import logging
 import os
 import re
+from email.message import Message
 from enum import Enum
 from pathlib import Path
 from random import randint
@@ -158,9 +158,11 @@ class EdiEnergyScraper:
     def _add_file_extension_to_file_basename(headers: dict, file_basename: str) -> str:
         """Extracts the extension of a file from a response header and add it to the file basename."""
         content_disposition = headers["Content-Disposition"]
-        _, params = cgi.parse_header(content_disposition)
-        file_extension = Path(params["filename"]).suffix
+        params = Message()
+        params["content-type"] = content_disposition
+        file_extension = Path(str(params.get_param("filename"))).suffix
         file_name = file_basename + file_extension
+
         return file_name
 
     @staticmethod
