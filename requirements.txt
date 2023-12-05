@@ -42,7 +42,7 @@ pycares==4.3.0
     # via aiodns
 pycparser==2.21
     # via cffi
-pypdf==3.16.2
+pypdf==3.17.1
     # via -r requirements.in
 soupsieve==2.3.2.post1
     # via beautifulsoup4
