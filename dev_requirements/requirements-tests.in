@@ -1,0 +1,6 @@
+# specific requirements for the tox coverage env
+pytest
+pytest-datafiles
+pytest-mock
+pytest-asyncio==0.22.0 #pinned for bugs/breaking changes in 0.23.x
+aioresponses
