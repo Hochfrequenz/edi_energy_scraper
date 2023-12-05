@@ -1,0 +1,6 @@
+# specific requirements for the tox coverage env
+pytest
+pytest-datafiles
+pytest-mock
+pytest-asyncio
+aioresponses
