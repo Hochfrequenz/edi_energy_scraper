@@ -1,3 +1,67 @@
+# NOTE: you have to use single-quoted strings in TOML for regular expressions.
+# It's the equivalent of r-strings in Python.  Multiline strings are treated as
+# verbose regular expressions by Black.  Use [ ] to denote a significant space
+# character.
+
+# Build system information and other project-specific configuration below.
+
+[build-system]
+requires = ["hatchling>=1.8.0", "hatch-vcs", "hatch-fancy-pypi-readme"]
+build-backend = "hatchling.build"
+
+[project]
+name = "edi_energy_scraper"
+description = "a scraper to mirror edi-energy.de"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [
+    { name = "Konstantin Klein", email = "konstantin.klein@hochfrequenz.de" },
+]
+keywords = ["automation", "ahb", "bdew", "edi@energy"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "beautifulsoup4>=4.11.1",
+    "aiohttp>=3.8.4",
+    "aiohttp-requests>=0.2.2",
+    "pypdf>=3.4.1",
+]
+dynamic = ["readme", "version"]
+
+[project.urls]
+Changelog = "https://github.com/Hochfrequenz/edi_energy_scraper/releases"
+Homepage = "https://github.com/Hochfrequenz/edi_energy_scraper"
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+fragments = [{ path = "README.md" }]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/_edi_energy_scraper_version.py"
+template = '''
+version = "{version}"
+'''
+
+[tool.hatch.build.targets.sdist]
+exclude = ["/unittests"]
+
+[tool.hatch.build.targets.wheel]
+only-include = ["src"]
+sources = ["src"]
+
+
 [tool.black]
 line-length = 120
 
@@ -13,9 +77,7 @@ max-line-length = 120
 # even if they have no @pytest.mark.asyncio marker.
 # https://github.com/pytest-dev/pytest-asyncio#auto-mode
 asyncio_mode = "auto"
-markers = [
-    "datafiles"
-]
+markers = ["datafiles"]
 
 # the following lines are needed if you would like to build a python package
 # and you want to use semantic versioning
