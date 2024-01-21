@@ -2,8 +2,6 @@
 A module to scrape data from edi-energy.de.
 """
 import asyncio
-
-# https://github.com/Hochfrequenz/edi_energy_scraper/issues/28
 import datetime
 import io
 import itertools
@@ -11,7 +9,6 @@ import logging
 import os
 import re
 from email.message import Message
-from enum import Enum
 from pathlib import Path
 from random import randint
 from typing import Awaitable, Dict, Optional, Set, Union
@@ -22,24 +19,10 @@ from aiohttp_requests import Requests  # type:ignore[import]
 from bs4 import BeautifulSoup, Comment  # type:ignore[import]
 from pypdf import PdfReader
 
+from edi_energy_scraper.epoch import Epoch
+
 _logger = logging.getLogger("edi_energy_scraper")
 _logger.setLevel(logging.DEBUG)
-
-
-class Epoch(str, Enum):  # pylint: disable=too-few-public-methods
-    """
-    An Epoch describes the time range in which documents are valid.
-    """
-
-    PAST = "past"  #: documents that are not valid anymore and have been archived
-    CURRENT = "current"  #: documents that are currently valid valid_from <= now < valid_to
-    FUTURE = "future"  #: documents that will become valid in the future (most likely with the next format version)
-
-    def __str__(self):
-        """
-        this is required because the behaviour of "StrEnum"s changed in python 3.11
-        """
-        return self.value
 
 
 class EdiEnergyScraper:
@@ -87,7 +70,7 @@ class EdiEnergyScraper:
     async def _download_and_save_pdf(self, epoch: Epoch, file_basename: str, link: str) -> Path:
         """
         Downloads a PDF file from a given link and stores it under the file name in a folder that has the same name
-        as the directory, if the pdf does not exist yet or if the metadata has changed since the last download.
+        as the directory if the pdf does not exist yet or if the metadata has changed since the last download.
         Returns the path to the downloaded pdf.
         """
         if not link.startswith("http"):
@@ -325,8 +308,8 @@ class EdiEnergyScraper:
         if not self._root_dir.exists() or not self._root_dir.is_dir():
             # we'll raise an error for the root dir, but create sub dirs on the fly
             raise ValueError(f"The path {self._root_dir} is either no directory or does not exist")
-        for epoch in Epoch:
-            epoch_dir = self._root_dir / Path(str(epoch))
+        for _epoch in Epoch:
+            epoch_dir = self._root_dir / Path(str(_epoch))
             if not epoch_dir.exists():
                 epoch_dir.mkdir(exist_ok=True)
         index_soup = await self.get_index()
@@ -337,10 +320,10 @@ class EdiEnergyScraper:
             outfile.write(index_soup.prettify())
         epoch_links = EdiEnergyScraper.get_epoch_links(await self._get_soup(self.get_documents_page_link(index_soup)))
         new_file_paths: Set[Path] = set()
-        for epoch, epoch_link in epoch_links.items():
-            _logger.info("Processing %s", epoch)
+        for _epoch, epoch_link in epoch_links.items():
+            _logger.info("Processing %s", _epoch)
             epoch_soup = await self._get_soup(epoch_link)
-            epoch_path: Path = Path(self._root_dir, f"{epoch}.html")  # e.g. "future.html"
+            epoch_path: Path = Path(self._root_dir, f"{_epoch}.html")  # e.g. "future.html"
             with open(epoch_path, "w+", encoding="utf8") as outfile:
                 outfile.write(epoch_soup.prettify())
             file_map = EdiEnergyScraper.get_epoch_file_map(epoch_soup)
@@ -349,10 +332,10 @@ class EdiEnergyScraper:
             for file_basename, link in file_map.items():
                 download_tasks.append(
                     self._download(
-                        epoch,
+                        _epoch,
                         file_basename,
                         link,
-                        f"Successfully downloaded {epoch} file {next(file_counter)}/{len(file_map)}",
+                        f"Successfully downloaded {_epoch} file {next(file_counter)}/{len(file_map)}",
                     )
                 )
             download_results: list[Optional[Path]] = await asyncio.gather(*download_tasks)
