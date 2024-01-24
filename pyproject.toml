@@ -34,6 +34,7 @@ dependencies = [
     "aiohttp>=3.8.4",
     "aiohttp-requests>=0.2.2",
     "pypdf>=3.4.1",
+    "maus>=0.4.1",
 ]
 dynamic = ["readme", "version"]
 
