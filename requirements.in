@@ -2,3 +2,4 @@ beautifulsoup4
 pypdf
 aiohttp
 aiohttp_requests>=0.2.2
+maus>=0.4.1
