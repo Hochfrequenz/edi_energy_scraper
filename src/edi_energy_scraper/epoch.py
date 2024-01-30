@@ -1,7 +1,6 @@
 """
 this module contains the epoch enum
 """
-
 from enum import Enum
 
 
