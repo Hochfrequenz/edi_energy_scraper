@@ -301,7 +301,7 @@ class EdiEnergyScraper:
             raise
         return file_path
 
-    def get_edifact_format(self, path: Path) -> tuple[EdifactFormatVersion, list[EdifactFormat] | None]:
+    def get_edifact_format(self, path: Path) -> tuple[EdifactFormatVersion, Optional[list[EdifactFormat]]]:
         """
         Determines the edifact format of a given file
         """

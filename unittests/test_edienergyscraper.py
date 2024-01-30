@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 import pytest
 from aioresponses import aioresponses
@@ -875,7 +876,7 @@ class TestEdiEnergyScraper:
         ],
     )
     def test_get_edifact_format(
-        self, input_files: list[str], expected_results: list[(EdifactFormatVersion, EdifactFormat | None)]
+        self, input_files: list[str], expected_results: list[(EdifactFormatVersion, Optional[EdifactFormat])]
     ):
         results = list()
         ees = EdiEnergyScraper()
