@@ -17,6 +17,7 @@ import aiohttp
 from aiohttp import ServerDisconnectedError
 from aiohttp_requests import Requests  # type:ignore[import]
 from bs4 import BeautifulSoup, Comment  # type:ignore[import]
+from maus.edifact import EdifactFormat, EdifactFormatVersion, get_edifact_format_version
 from pypdf import PdfReader
 
 from edi_energy_scraper.epoch import Epoch
@@ -299,6 +300,25 @@ class EdiEnergyScraper:
                 return None
             raise
         return file_path
+
+    def get_edifact_format(self, path: Path) -> tuple[EdifactFormatVersion, list[EdifactFormat] | None]:
+        """
+        Determines the edifact format of a given file
+        """
+        filename = path.stem
+        date_string = filename.split("_")[-1]  # Assuming date is in the last part of filename
+        date_format = "%Y%m%d"
+        date = datetime.datetime.strptime(date_string, date_format)
+        date = date.replace(tzinfo=datetime.timezone.utc)
+        version = get_edifact_format_version(date)
+        edifactformat = None
+        for entry in EdifactFormat:
+            if str(entry) in filename:
+                if edifactformat is None:
+                    edifactformat = [entry]
+                else:
+                    edifactformat.append(entry)
+        return (version, edifactformat)
 
     # pylint:disable=too-many-locals
     async def mirror(self):
