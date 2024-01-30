@@ -398,9 +398,11 @@ class TestEdiEnergyScraper:
             "edi_energy_scraper.EdiEnergyScraper.get_epoch_file_map",
             side_effect=TestEdiEnergyScraper._get_efm_mocker,
         )
-        with open(datafiles / "example_ahb.pdf", "rb") as pdf_file_current, open(
-            datafiles / "Aenderungsantrag_EBD.xlsx", "rb"
-        ) as file_future, open(datafiles / "example_ahb.pdf", "rb") as file_past:
+        with (
+            open(datafiles / "example_ahb.pdf", "rb") as pdf_file_current,
+            open(datafiles / "Aenderungsantrag_EBD.xlsx", "rb") as file_future,
+            open(datafiles / "example_ahb.pdf", "rb") as file_past,
+        ):
             with aioresponses() as mock:
                 mock.get(
                     "https://www.edi-energy.de/a_future_ahb.xlsx",
