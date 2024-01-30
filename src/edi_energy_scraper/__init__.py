@@ -1,7 +1,6 @@
 """
 A module to scrape data from edi-energy.de.
 """
-
 import asyncio
 import datetime
 import io
