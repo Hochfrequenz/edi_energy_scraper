@@ -1,6 +1,7 @@
 """
 A minimal working example on how to use this package
 """
+
 import asyncio
 
 from edi_energy_scraper import EdiEnergyScraper
