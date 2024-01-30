@@ -42,7 +42,7 @@ packaging==23.2
     # via marshmallow
 pypdf==4.0.0
     # via edi_energy_scraper (pyproject.toml)
-soupsieve==2.3.2.post1
+soupsieve==2.5
     # via beautifulsoup4
 yarl==1.9.4
     # via aiohttp
