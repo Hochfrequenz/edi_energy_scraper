@@ -15,6 +15,7 @@ from random import randint
 from typing import Awaitable, Dict, List, Optional, Set, Tuple, Union
 
 import aiohttp
+import pytz
 from aiohttp import ServerDisconnectedError
 from aiohttp_requests import Requests  # type:ignore[import]
 from bs4 import BeautifulSoup, Comment  # type:ignore[import]
@@ -310,9 +311,9 @@ class EdiEnergyScraper:
         filename = path.stem
         date_string = filename.split("_")[-1]  # Assuming date is in the last part of filename
         date_format = "%Y%m%d"
-        date = datetime.datetime.strptime(date_string, date_format)
-        date = date.replace(tzinfo=datetime.timezone.utc)
-        version = get_edifact_format_version(date)
+        berlin = pytz.timezone("Europe/Berlin")
+        berlin_local_time = datetime.datetime.strptime(date_string, date_format).astimezone(berlin)
+        version = get_edifact_format_version(berlin_local_time)
         edifactformat: List[Optional[EdifactFormat]] = []
         for entry in EdifactFormat:
             if str(entry) in filename:
