@@ -1,10 +1,12 @@
 from pathlib import Path
+from typing import List, Optional, Tuple
 
 import pytest
 from aioresponses import aioresponses
 from bs4 import BeautifulSoup
+from maus.edifact import EdifactFormat, EdifactFormatVersion
 
-from edi_energy_scraper import EdiEnergyScraper, Epoch
+from edi_energy_scraper import EdiEnergyScraper, Epoch, get_edifact_version_and_formats
 
 
 class TestEdiEnergyScraper:
@@ -434,3 +436,82 @@ class TestEdiEnergyScraper:
         }
         remove_no_longer_online_files_mocker.assert_called_once_with(test_new_file_paths)
         assert "Downloaded index.html" in caplog.messages
+
+    @pytest.mark.parametrize(
+        "input_filename, expected_result",
+        [
+            pytest.param(
+                "APERAKMIG-informatorischeLesefassung2.1h_99991231_20221001.docx",
+                (EdifactFormatVersion.FV2210, [EdifactFormat.APERAK]),
+            ),
+            pytest.param("COMDISMIG1.0c_20240331_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.COMDIS])),
+            pytest.param("CONTRLMIG2.0b_99991231_20221001.pdf", (EdifactFormatVersion.FV2210, [EdifactFormat.CONTRL])),
+            pytest.param(
+                "IFTSTAAHB-informatorischeLesefassung2.0e_99991231_20231001.docx",
+                (EdifactFormatVersion.FV2310, [EdifactFormat.IFTSTA]),
+            ),
+            pytest.param(
+                "INSRPTAHB1.1g_99991231_20221001.pdf",
+                (EdifactFormatVersion.FV2210, [EdifactFormat.INSRPT]),
+            ),
+            pytest.param("INVOICMIG2.8b_20240331_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.INVOIC])),
+            pytest.param("MSCONSAHB3.1c_20240331_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.MSCONS])),
+            pytest.param("ORDCHGMIG1.1_99991231_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.ORDCHG])),
+            pytest.param("ORDERSMIG1.3_99991231_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.ORDERS])),
+            pytest.param("ORDRSPMIG1.3_99991231_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.ORDRSP])),
+            pytest.param("PRICATAHB2.0c_20240331_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.PRICAT])),
+            pytest.param("QUOTESMIG1.3_99991231_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.QUOTES])),
+            pytest.param("REMADVMIG2.9b_20240331_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.REMADV])),
+            pytest.param("REQOTEMIG1.3_99991231_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.REQOTE])),
+            pytest.param(
+                "UTILMDAHBGas1.0a_99991231_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.UTILMD])
+            ),
+            pytest.param(
+                "UTILTSAHBBerechnungsformel1.0e_20240331_20231001.pdf",
+                (EdifactFormatVersion.FV2310, [EdifactFormat.UTILTS]),
+            ),
+            pytest.param(
+                "APERAKCONTRLAHB2.3m_20240331_20231001.pdf",
+                (EdifactFormatVersion.FV2310, [EdifactFormat.APERAK, EdifactFormat.CONTRL]),
+            ),
+            pytest.param(
+                "INVOICREMADVAHB2.5b_20240331_20231001.pdf",
+                (EdifactFormatVersion.FV2310, [EdifactFormat.INVOIC, EdifactFormat.REMADV]),
+            ),
+            pytest.param(
+                "ORDERSORDRSPAHBMaBiS2.2c_99991231_20231001.pdf",
+                (EdifactFormatVersion.FV2310, [EdifactFormat.ORDERS, EdifactFormat.ORDRSP]),
+            ),
+            pytest.param(
+                "REQOTEQUOTESORDERSORDRSPORDCHGAHB2.2_99991231_20231001.pdf",
+                (
+                    EdifactFormatVersion.FV2310,
+                    [
+                        EdifactFormat.ORDCHG,
+                        EdifactFormat.ORDERS,
+                        EdifactFormat.ORDRSP,
+                        EdifactFormat.QUOTES,
+                        EdifactFormat.REQOTE,
+                    ],
+                ),
+            ),
+            pytest.param(
+                "CodelistedereuropäischenLändercodes1.0_99991231_20171001.pdf", (EdifactFormatVersion.FV2104, [])
+            ),
+            pytest.param("CodelistederZeitreihentypen1.1d_99991231_20211001.pdf", (EdifactFormatVersion.FV2110, [])),
+            pytest.param("KostenblattFB1.0b_99991231_20230401.pdf", (EdifactFormatVersion.FV2304, [])),
+            pytest.param("PARTINMIG1.0c_20240331_20240403.pdf", (EdifactFormatVersion.FV2404, [EdifactFormat.PARTIN])),
+            pytest.param("PARTINMIG1.0c_20240331_20241001.pdf", (EdifactFormatVersion.FV2410, [EdifactFormat.PARTIN])),
+            pytest.param("PARTINMIG1.0c_20240331_20250401.pdf", (EdifactFormatVersion.FV2504, [EdifactFormat.PARTIN])),
+            pytest.param("PARTINMIG1.0c_20240331_20251001.pdf", (EdifactFormatVersion.FV2510, [EdifactFormat.PARTIN])),
+        ],
+    )
+    def test_get_edifact_version_and_formats(
+        self, input_filename: str, expected_result: Tuple[EdifactFormatVersion, List[EdifactFormat]]
+    ):
+        """
+        Tests the determination of the edifact format and version for given files
+        """
+        actual = get_edifact_version_and_formats(Path(input_filename))
+
+        assert actual == expected_result

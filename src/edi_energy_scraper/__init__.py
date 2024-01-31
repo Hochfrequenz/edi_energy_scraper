@@ -12,12 +12,14 @@ import re
 from email.message import Message
 from pathlib import Path
 from random import randint
-from typing import Awaitable, Dict, Optional, Set, Union
+from typing import Awaitable, Dict, List, Optional, Set, Tuple, Union
 
 import aiohttp
+import pytz
 from aiohttp import ServerDisconnectedError
 from aiohttp_requests import Requests  # type:ignore[import]
 from bs4 import BeautifulSoup, Comment  # type:ignore[import]
+from maus.edifact import EdifactFormat, EdifactFormatVersion, get_edifact_format_version
 from pypdf import PdfReader
 
 from edi_energy_scraper.epoch import Epoch
@@ -328,7 +330,7 @@ class EdiEnergyScraper:
             with open(epoch_path, "w+", encoding="utf8") as outfile:
                 outfile.write(epoch_soup.prettify())
             file_map = EdiEnergyScraper.get_epoch_file_map(epoch_soup)
-            download_tasks: list[Awaitable[Optional[Path]]] = []
+            download_tasks: List[Awaitable[Optional[Path]]] = []
             file_counter = itertools.count()
             for file_basename, link in file_map.items():
                 download_tasks.append(
@@ -339,9 +341,29 @@ class EdiEnergyScraper:
                         f"Successfully downloaded {_epoch} file {next(file_counter)}/{len(file_map)}",
                     )
                 )
-            download_results: list[Optional[Path]] = await asyncio.gather(*download_tasks)
+            download_results: List[Optional[Path]] = await asyncio.gather(*download_tasks)
             for download_result in download_results:
                 if download_result is not None:
                     new_file_paths.add(download_result)
         self.remove_no_longer_online_files(new_file_paths)
         _logger.info("Finished mirroring")
+
+
+def get_edifact_version_and_formats(path: Path) -> Tuple[EdifactFormatVersion, List[EdifactFormat]]:
+    """
+    Determines the edifact formats and the version of a given file.
+    A file can describe more than one format (for example APERAK and CONTRL).
+    Therefore, a list of all formats described in a file is returned.
+    """
+    filename = path.stem
+    date_string = filename.split("_")[-1]  # Assuming date is in the last part of filename
+    date_format = "%Y%m%d"
+    berlin = pytz.timezone("Europe/Berlin")
+    berlin_local_time = datetime.datetime.strptime(date_string, date_format).astimezone(berlin)
+    version = get_edifact_format_version(berlin_local_time)
+    list_of_edifactformats: List[EdifactFormat] = []
+    for entry in EdifactFormat:
+        if str(entry) in filename:
+            list_of_edifactformats.append(entry)
+
+    return version, list_of_edifactformats
