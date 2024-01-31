@@ -878,6 +878,9 @@ class TestEdiEnergyScraper:
     def test_get_edifact_format(
         self, input_files: list[str], expected_results: list[(EdifactFormatVersion, Optional[EdifactFormat])]
     ):
+        """
+        Tests the determination of the edifact format and version for given files
+        """
         results = list()
         ees = EdiEnergyScraper()
         for file in input_files:

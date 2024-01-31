@@ -301,9 +301,10 @@ class EdiEnergyScraper:
             raise
         return file_path
 
-    def get_edifact_format(self, path: Path) -> tuple[EdifactFormatVersion, Optional[list[EdifactFormat]]]:
+    @staticmethod
+    def get_edifact_format(path: Path) -> tuple[EdifactFormatVersion, Optional[list[EdifactFormat]]]:
         """
-        Determines the edifact format of a given file
+        Determines the edifact format and version of a given file
         """
         filename = path.stem
         date_string = filename.split("_")[-1]  # Assuming date is in the last part of filename
@@ -318,7 +319,7 @@ class EdiEnergyScraper:
                     edifactformat = [entry]
                 else:
                     edifactformat.append(entry)
-        return (version, edifactformat)
+        return version, edifactformat
 
     # pylint:disable=too-many-locals
     async def mirror(self):
