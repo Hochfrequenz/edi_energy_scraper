@@ -306,7 +306,9 @@ class EdiEnergyScraper:
     @staticmethod
     def get_edifact_format(path: Path) -> Tuple[EdifactFormatVersion, List[Optional[EdifactFormat]]]:
         """
-        Determines the edifact format and version of a given file
+        Determines the edifact formats and the version of a given file.
+        A file can describe more than one format (for example APERAK and CONTRL).
+        Therefore, a list of all formats described in a file is returned.
         """
         filename = path.stem
         date_string = filename.split("_")[-1]  # Assuming date is in the last part of filename
