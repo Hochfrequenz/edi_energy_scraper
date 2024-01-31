@@ -11,7 +11,7 @@ import re
 from email.message import Message
 from pathlib import Path
 from random import randint
-from typing import Awaitable, Dict, Optional, Set, Union
+from typing import Awaitable, Dict, Optional, Set, Union, Tuple, List
 
 import aiohttp
 from aiohttp import ServerDisconnectedError
@@ -302,7 +302,7 @@ class EdiEnergyScraper:
         return file_path
 
     @staticmethod
-    def get_edifact_format(path: Path) -> tuple[EdifactFormatVersion, list[Optional[EdifactFormat]]]:
+    def get_edifact_format(path: Path) -> Tuple[EdifactFormatVersion, List[Optional[EdifactFormat]]]:
         """
         Determines the edifact format and version of a given file
         """
@@ -312,7 +312,7 @@ class EdiEnergyScraper:
         date = datetime.datetime.strptime(date_string, date_format)
         date = date.replace(tzinfo=datetime.timezone.utc)
         version = get_edifact_format_version(date)
-        edifactformat: list[Optional[EdifactFormat]] = []
+        edifactformat: List[Optional[EdifactFormat]] = []
         for entry in EdifactFormat:
             if str(entry) in filename:
                 edifactformat.append(entry)

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Tuple
 
 import pytest
 from aioresponses import aioresponses
@@ -876,7 +876,7 @@ class TestEdiEnergyScraper:
         ],
     )
     def test_get_edifact_format(
-        self, input_files: list[str], expected_results: list[tuple[EdifactFormatVersion, Optional[EdifactFormat]]]
+        self, input_files: List[str], expected_results: List[Tuple[EdifactFormatVersion, Optional[EdifactFormat]]]
     ):
         """
         Tests the determination of the edifact format and version for given files
