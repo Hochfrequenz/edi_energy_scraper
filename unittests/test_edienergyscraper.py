@@ -899,7 +899,7 @@ class TestEdiEnergyScraper:
         ],
     )
     def test_get_edifact_format_parametrize(
-        self, input_filename: str, expected_result: Tuple[EdifactFormatVersion, list[Optional[EdifactFormat]]]
+        self, input_filename: str, expected_result: Tuple[EdifactFormatVersion, List[Optional[EdifactFormat]]]
     ):
         """
         Tests the determination of the edifact format and version for given files
