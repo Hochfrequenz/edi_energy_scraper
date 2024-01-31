@@ -11,7 +11,7 @@ import re
 from email.message import Message
 from pathlib import Path
 from random import randint
-from typing import Awaitable, Dict, Optional, Set, Union
+from typing import Awaitable, Dict, List, Optional, Set, Tuple, Union
 
 import aiohttp
 from aiohttp import ServerDisconnectedError
