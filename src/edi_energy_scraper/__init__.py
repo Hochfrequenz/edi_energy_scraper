@@ -11,7 +11,7 @@ import re
 from email.message import Message
 from pathlib import Path
 from random import randint
-from typing import Awaitable, Dict, List, Optional, Set, Tuple, Union
+from typing import Awaitable, Dict, Optional, Set, Union
 
 import aiohttp
 from aiohttp import ServerDisconnectedError
@@ -302,7 +302,7 @@ class EdiEnergyScraper:
         return file_path
 
     @staticmethod
-    def get_edifact_format(path: Path) -> tuple[EdifactFormatVersion, Optional[list[EdifactFormat]]]:
+    def get_edifact_format(path: Path) -> tuple[EdifactFormatVersion, list[Optional[EdifactFormat]]]:
         """
         Determines the edifact format and version of a given file
         """
@@ -312,13 +312,12 @@ class EdiEnergyScraper:
         date = datetime.datetime.strptime(date_string, date_format)
         date = date.replace(tzinfo=datetime.timezone.utc)
         version = get_edifact_format_version(date)
-        edifactformat = None
+        edifactformat: list[Optional[EdifactFormat]] = []
         for entry in EdifactFormat:
             if str(entry) in filename:
-                if edifactformat is None:
-                    edifactformat = [entry]
-                else:
-                    edifactformat.append(entry)
+                edifactformat.append(entry)
+        if not edifactformat:
+            edifactformat = [None]
         return version, edifactformat
 
     # pylint:disable=too-many-locals
