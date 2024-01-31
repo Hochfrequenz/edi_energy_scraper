@@ -11,7 +11,7 @@ import re
 from email.message import Message
 from pathlib import Path
 from random import randint
-from typing import Awaitable, Dict, Optional, Set, Union
+from typing import Awaitable, Dict, Optional, Set, Union, Tuple, List
 
 import aiohttp
 from aiohttp import ServerDisconnectedError
@@ -302,7 +302,7 @@ class EdiEnergyScraper:
         return file_path
 
     @staticmethod
-    def get_edifact_format(path: Path) -> tuple[EdifactFormatVersion, list[Optional[EdifactFormat]]]:
+    def get_edifact_format(path: Path) -> Tuple[EdifactFormatVersion, List[Optional[EdifactFormat]]]:
         """
         Determines the edifact format and version of a given file
         """
@@ -312,7 +312,7 @@ class EdiEnergyScraper:
         date = datetime.datetime.strptime(date_string, date_format)
         date = date.replace(tzinfo=datetime.timezone.utc)
         version = get_edifact_format_version(date)
-        edifactformat: list[Optional[EdifactFormat]] = []
+        edifactformat: List[Optional[EdifactFormat]] = []
         for entry in EdifactFormat:
             if str(entry) in filename:
                 edifactformat.append(entry)
@@ -347,7 +347,7 @@ class EdiEnergyScraper:
             with open(epoch_path, "w+", encoding="utf8") as outfile:
                 outfile.write(epoch_soup.prettify())
             file_map = EdiEnergyScraper.get_epoch_file_map(epoch_soup)
-            download_tasks: list[Awaitable[Optional[Path]]] = []
+            download_tasks: List[Awaitable[Optional[Path]]] = []
             file_counter = itertools.count()
             for file_basename, link in file_map.items():
                 download_tasks.append(
@@ -358,7 +358,7 @@ class EdiEnergyScraper:
                         f"Successfully downloaded {_epoch} file {next(file_counter)}/{len(file_map)}",
                     )
                 )
-            download_results: list[Optional[Path]] = await asyncio.gather(*download_tasks)
+            download_results: List[Optional[Path]] = await asyncio.gather(*download_tasks)
             for download_result in download_results:
                 if download_result is not None:
                     new_file_paths.add(download_result)
