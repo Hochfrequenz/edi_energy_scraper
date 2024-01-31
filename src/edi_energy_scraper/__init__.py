@@ -303,27 +303,6 @@ class EdiEnergyScraper:
             raise
         return file_path
 
-    @staticmethod
-    def get_edifact_format(path: Path) -> Tuple[EdifactFormatVersion, List[Optional[EdifactFormat]]]:
-        """
-        Determines the edifact formats and the version of a given file.
-        A file can describe more than one format (for example APERAK and CONTRL).
-        Therefore, a list of all formats described in a file is returned.
-        """
-        filename = path.stem
-        date_string = filename.split("_")[-1]  # Assuming date is in the last part of filename
-        date_format = "%Y%m%d"
-        berlin = pytz.timezone("Europe/Berlin")
-        berlin_local_time = datetime.datetime.strptime(date_string, date_format).astimezone(berlin)
-        version = get_edifact_format_version(berlin_local_time)
-        edifactformat: List[Optional[EdifactFormat]] = []
-        for entry in EdifactFormat:
-            if str(entry) in filename:
-                edifactformat.append(entry)
-        if not edifactformat:
-            edifactformat = [None]
-        return version, edifactformat
-
     # pylint:disable=too-many-locals
     async def mirror(self):
         """
@@ -368,3 +347,23 @@ class EdiEnergyScraper:
                     new_file_paths.add(download_result)
         self.remove_no_longer_online_files(new_file_paths)
         _logger.info("Finished mirroring")
+
+
+def get_edifact_version_and_formats(path: Path) -> Tuple[EdifactFormatVersion, List[EdifactFormat]]:
+    """
+    Determines the edifact formats and the version of a given file.
+    A file can describe more than one format (for example APERAK and CONTRL).
+    Therefore, a list of all formats described in a file is returned.
+    """
+    filename = path.stem
+    date_string = filename.split("_")[-1]  # Assuming date is in the last part of filename
+    date_format = "%Y%m%d"
+    berlin = pytz.timezone("Europe/Berlin")
+    berlin_local_time = datetime.datetime.strptime(date_string, date_format).astimezone(berlin)
+    version = get_edifact_format_version(berlin_local_time)
+    list_of_edifactformats: List[EdifactFormat] = []
+    for entry in EdifactFormat:
+        if str(entry) in filename:
+            list_of_edifactformats.append(entry)
+
+    return version, list_of_edifactformats

@@ -6,7 +6,7 @@ from aioresponses import aioresponses
 from bs4 import BeautifulSoup
 from maus.edifact import EdifactFormat, EdifactFormatVersion
 
-from edi_energy_scraper import EdiEnergyScraper, Epoch
+from edi_energy_scraper import EdiEnergyScraper, Epoch, get_edifact_version_and_formats
 
 
 class TestEdiEnergyScraper:
@@ -496,25 +496,22 @@ class TestEdiEnergyScraper:
                 ),
             ),
             pytest.param(
-                "CodelistedereuropäischenLändercodes1.0_99991231_20171001.pdf", (EdifactFormatVersion.FV2104, [None])
+                "CodelistedereuropäischenLändercodes1.0_99991231_20171001.pdf", (EdifactFormatVersion.FV2104, [])
             ),
-            pytest.param(
-                "CodelistederZeitreihentypen1.1d_99991231_20211001.pdf", (EdifactFormatVersion.FV2110, [None])
-            ),
-            pytest.param("KostenblattFB1.0b_99991231_20230401.pdf", (EdifactFormatVersion.FV2304, [None])),
+            pytest.param("CodelistederZeitreihentypen1.1d_99991231_20211001.pdf", (EdifactFormatVersion.FV2110, [])),
+            pytest.param("KostenblattFB1.0b_99991231_20230401.pdf", (EdifactFormatVersion.FV2304, [])),
             pytest.param("PARTINMIG1.0c_20240331_20240403.pdf", (EdifactFormatVersion.FV2404, [EdifactFormat.PARTIN])),
             pytest.param("PARTINMIG1.0c_20240331_20241001.pdf", (EdifactFormatVersion.FV2410, [EdifactFormat.PARTIN])),
             pytest.param("PARTINMIG1.0c_20240331_20250401.pdf", (EdifactFormatVersion.FV2504, [EdifactFormat.PARTIN])),
             pytest.param("PARTINMIG1.0c_20240331_20251001.pdf", (EdifactFormatVersion.FV2510, [EdifactFormat.PARTIN])),
         ],
     )
-    def test_get_edifact_format_parametrize(
-        self, input_filename: str, expected_result: Tuple[EdifactFormatVersion, List[Optional[EdifactFormat]]]
+    def test_get_edifact_version_and_formats(
+        self, input_filename: str, expected_result: Tuple[EdifactFormatVersion, List[EdifactFormat]]
     ):
         """
         Tests the determination of the edifact format and version for given files
         """
-        ees = EdiEnergyScraper()
-        actual = ees.get_edifact_format(Path(input_filename))
+        actual = get_edifact_version_and_formats(Path(input_filename))
 
         assert actual == expected_result
