@@ -887,3 +887,24 @@ class TestEdiEnergyScraper:
             results.append(ees.get_edifact_format(Path(file)))
 
         assert results == expected_results
+
+    @pytest.mark.parametrize(
+        "input_filename, expected_result",
+        [
+            pytest.param("COMDISMIG1.0c_20240331_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.COMDIS])),
+            pytest.param(
+                "UTILMDAHBGas1.0a_99991231_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.UTILMD])
+            ),
+            # todo @stefan: add more test cases
+        ],
+    )
+    def test_get_edifact_format_parametrize(
+        self, input_filename: str, expected_result: Tuple[EdifactFormatVersion, list[Optional[EdifactFormat]]]
+    ):
+        """
+        Tests the determination of the edifact format and version for given files
+        """
+        ees = EdiEnergyScraper()
+        actual = ees.get_edifact_format(Path(input_filename))
+
+        assert actual == expected_result
