@@ -163,7 +163,7 @@ class TestEdiEnergyScraper:
                 id="pdf",
             ),
             pytest.param(
-                "Aenderungsantrag_EBD.xlsx",
+                "Aenderungsantrag_EBD_20210210.xlsx",
                 "my_favourite_ahb_20210210.xlsx",
                 id="xlsx",
             ),
@@ -171,7 +171,7 @@ class TestEdiEnergyScraper:
     )
     @pytest.mark.datafiles(
         "./unittests/testfiles/example_ahb_20210210.pdf",
-        "./unittests/testfiles/Aenderungsantrag_EBD.xlsx",
+        "./unittests/testfiles/Aenderungsantrag_EBD_20210210.xlsx",
     )
     async def test_file_download_file_does_not_exists_yet(
         self,
@@ -323,8 +323,8 @@ class TestEdiEnergyScraper:
         assert (
             ees._root_dir / "future_20210210.html"
         ).exists()  # in general html wont be removed by the function under test
-        path_example_ahb = ees._get_file_path("future", "example_ahb_20210210.pdf")
-        path_example_ahb_2 = ees._get_file_path("future", "example_ahb_2_20210210.pdf")
+        path_example_ahb = ees._get_file_path("FV2104", [], "example_ahb_20210210.pdf")
+        path_example_ahb_2 = ees._get_file_path("FV2104", [], "example_ahb_2_20210210.pdf")
 
         # Verify remove called
         remove_mocker = mocker.patch("edi_energy_scraper.os.remove")
@@ -363,7 +363,7 @@ class TestEdiEnergyScraper:
 
     @pytest.mark.datafiles(
         "./unittests/testfiles/example_ahb_20210210.pdf",
-        "./unittests/testfiles/Aenderungsantrag_EBD.xlsx",
+        "./unittests/testfiles/Aenderungsantrag_EBD_20210210.xlsx",
         "./unittests/testfiles/dokumente_20210208.html",
         "./unittests/testfiles/index_20210208.html",
         "./unittests/testfiles/current_20210210.html",
@@ -399,13 +399,13 @@ class TestEdiEnergyScraper:
             side_effect=TestEdiEnergyScraper._get_efm_mocker,
         )
         with open(datafiles / "example_ahb_20210210.pdf", "rb") as pdf_file_current, open(
-            datafiles / "Aenderungsantrag_EBD.xlsx", "rb"
+            datafiles / "Aenderungsantrag_EBD_20210210.xlsx", "rb"
         ) as file_future, open(datafiles / "example_ahb_20210210.pdf", "rb") as file_past:
             with aioresponses() as mock:
                 mock.get(
                     "https://www.edi-energy.de/a_future_ahb.xlsx",
                     body=file_future.read(),
-                    headers={"Content-Disposition": 'attachment; filename="Aenderungsantrag_EBD.xlsx"'},
+                    headers={"Content-Disposition": 'attachment; filename="Aenderungsantrag_EBD_20210210.xlsx"'},
                 )
                 mock.get(
                     "https://www.edi-energy.de/a_current_ahb.pdf",
@@ -418,7 +418,7 @@ class TestEdiEnergyScraper:
                     headers={"Content-Disposition": 'attachment; filename="example_ahb_20210210.pdf"'},
                 )
                 ees = EdiEnergyScraper(path_to_mirror_directory=ees_dir)
-                await ees.mirror()
+                ees.mirror()
         assert (ees_dir / "index.html").exists()
         assert (ees_dir / "future.html").exists()
         assert (ees_dir / "current.html").exists()

@@ -70,7 +70,7 @@ class EdiEnergyScraper:
         EdiEnergyScraper.remove_comments(soup)
         return soup
 
-    async def _download_and_save_pdf(self, file_basename: str, link: str) -> Path:
+    async def _download_and_save_pdf(self, file_basename: str, link: str) -> List[Path]:
         """
         Downloads a PDF file from a given link and stores it under the file name in a folder that has the same name
         as the directory if the pdf does not exist yet or if the metadata has changed since the last download.
@@ -97,7 +97,9 @@ class EdiEnergyScraper:
         )
 
         version_and_formats = get_edifact_version_and_formats(Path(file_name))
-        file_path = self._get_file_path(file_name=file_name, version=version_and_formats[0])
+        list_of_file_paths = self._get_file_path(
+            file_name=file_name, version=version_and_formats[0], list_of_formats=version_and_formats[1]
+        )
         for number_of_tries in range(4, 0, -1):
             try:
                 response_content = await response.content.read()
@@ -108,38 +110,53 @@ class EdiEnergyScraper:
                     raise
                 await asyncio.sleep(delay=randint(5, 10))  # cool down...
         # Save file if it does not exist yet
-        if not os.path.isfile(file_path):
-            with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
-                _logger.debug("Saving new PDF %s", file_path)
-                outfile.write(response_content)
-            return file_path
+        for file_path in list_of_file_paths:
+            if not os.path.isfile(file_path):
+                with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
+                    _logger.debug("Saving new PDF %s", file_path)
+                    outfile.write(response_content)
 
         # First fix, different file types do just the same as before, only with correct file extension
         if not file_name.endswith(".pdf"):
-            with open(file_path, "wb+") as outfile:
-                _logger.debug("Saving %s", file_path)
-                outfile.write(response_content)
-            return file_path
+            for file_path in list_of_file_paths:
+                with open(file_path, "wb+") as outfile:
+                    _logger.debug("Saving %s", file_path)
+                    outfile.write(response_content)
 
         # Check if metadata has changed
-        metadata_has_changed = self._have_different_metadata(response_content, file_path)
-        if metadata_has_changed:  # delete old file and replace with new one
-            _logger.debug("Metadata for PDF %s changed; Replacing it", file_path)
-            os.remove(file_path)
-            with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
-                outfile.write(response_content)
-        else:
-            _logger.debug("Meta data haven't changed for %s", file_path)
-        return file_path
+        for file_path in list_of_file_paths:
+            metadata_has_changed = self._have_different_metadata(response_content, file_path)
+            if metadata_has_changed:  # delete old file and replace with new one
+                _logger.debug("Metadata for PDF %s changed; Replacing it", file_path)
+                os.remove(file_path)
+                with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
+                    outfile.write(response_content)
+            else:
+                _logger.debug("Meta data haven't changed for %s", file_path)
+        return list_of_file_paths
 
-    def _get_file_path(self, version: EdifactFormatVersion, file_name: str) -> Path:
+    def _get_file_path(
+        self, version: EdifactFormatVersion, list_of_formats: List[EdifactFormat], file_name: str
+    ) -> List[Path]:
+        list_of_file_paths = []
         if "/" in file_name:
             raise ValueError(f"file names must not contain slashes: '{file_name}'")
-        file_path = Path(self._root_dir).joinpath(
-            f"{version}/{file_name}"  # e.g "{root_dir}/future/ahbmabis_99991231_20210401.pdf"
-        )
+        if list_of_formats:
+            for edifact_format in list_of_formats:
+                list_of_file_paths.append(
+                    Path(self._root_dir).joinpath(
+                        f"{version}/{edifact_format}/{file_name}"
+                        # e.g "{root_dir}/FV2510/PARTIN/PARTINMIG1.0c_20240331_20251001.pdf.pdf"
+                    )
+                )
+        else:
+            list_of_file_paths.append(
+                Path(self._root_dir).joinpath(
+                    f"{version}/{file_name}"  # e.g "{root_dir}/FV2104/ahbmabis_99991231_20210401.pdf"
+                )
+            )
 
-        return file_path
+        return list_of_file_paths
 
     @staticmethod
     def _add_file_extension_to_file_basename(headers: dict, file_basename: str) -> str:
@@ -289,9 +306,7 @@ class EdiEnergyScraper:
 
         return no_longer_online_files
 
-    async def _download(
-        self, file_basename: str, link: str, optional_success_msg: Optional[str] = None
-    ) -> Optional[Path]:
+    async def _download(self, file_basename: str, link: str, optional_success_msg: Optional[str] = None) -> List[Path]:
         try:
             file_path = await self._download_and_save_pdf(file_basename=file_basename, link=link)
             if optional_success_msg is not None:
@@ -300,7 +315,7 @@ class EdiEnergyScraper:
             if key_error.args[0].lower() == "content-disposition":
                 _logger.exception("Failed to download '%s'", file_basename, exc_info=True)
                 # workaround to https://github.com/Hochfrequenz/edi_energy_scraper/issues/31
-                return None
+                return []
             raise
         return file_path
 
@@ -334,15 +349,15 @@ class EdiEnergyScraper:
             download_tasks: List[Awaitable[Optional[Path]]] = []
             file_counter = itertools.count()
             for file_basename, link in file_map.items():
-                download_tasks.append(
-                    self._download(
+                download_tasks.extend(
+                    await self._download(
                         file_basename,
                         link,
                         f"Successfully downloaded {_epoch} file {next(file_counter)}/{len(file_map)}",
                     )
                 )
             download_results: List[Optional[Path]] = await asyncio.gather(*download_tasks)
-            for download_result in download_results:
+            for download_result in download_tasks:
                 if download_result is not None:
                     new_file_paths.add(download_result)
         self.remove_no_longer_online_files(new_file_paths)
