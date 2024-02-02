@@ -70,7 +70,7 @@ class EdiEnergyScraper:
         EdiEnergyScraper.remove_comments(soup)
         return soup
 
-    async def _download_and_save_pdf(self, epoch: Epoch, file_basename: str, link: str) -> Path:
+    async def _download_and_save_pdf(self, file_basename: str, link: str) -> Path:
         """
         Downloads a PDF file from a given link and stores it under the file name in a folder that has the same name
         as the directory if the pdf does not exist yet or if the metadata has changed since the last download.
@@ -96,7 +96,8 @@ class EdiEnergyScraper:
             headers=response.headers, file_basename=file_basename
         )
 
-        file_path = self._get_file_path(file_name=file_name, epoch=epoch)
+        version_and_formats = get_edifact_version_and_formats(Path(file_name))
+        file_path = self._get_file_path(file_name=file_name, version=version_and_formats[0])
         for number_of_tries in range(4, 0, -1):
             try:
                 response_content = await response.content.read()
@@ -131,11 +132,11 @@ class EdiEnergyScraper:
             _logger.debug("Meta data haven't changed for %s", file_path)
         return file_path
 
-    def _get_file_path(self, epoch: Epoch, file_name: str) -> Path:
+    def _get_file_path(self, version: EdifactFormatVersion, file_name: str) -> Path:
         if "/" in file_name:
             raise ValueError(f"file names must not contain slashes: '{file_name}'")
         file_path = Path(self._root_dir).joinpath(
-            f"{epoch}/{file_name}"  # e.g "{root_dir}/future/ahbmabis_99991231_20210401.pdf"
+            f"{version}/{file_name}"  # e.g "{root_dir}/future/ahbmabis_99991231_20210401.pdf"
         )
 
         return file_path
@@ -289,10 +290,10 @@ class EdiEnergyScraper:
         return no_longer_online_files
 
     async def _download(
-        self, epoch: Epoch, file_basename: str, link: str, optional_success_msg: Optional[str] = None
+        self, file_basename: str, link: str, optional_success_msg: Optional[str] = None
     ) -> Optional[Path]:
         try:
-            file_path = await self._download_and_save_pdf(epoch=epoch, file_basename=file_basename, link=link)
+            file_path = await self._download_and_save_pdf(file_basename=file_basename, link=link)
             if optional_success_msg is not None:
                 _logger.debug(optional_success_msg)
         except KeyError as key_error:
@@ -335,7 +336,6 @@ class EdiEnergyScraper:
             for file_basename, link in file_map.items():
                 download_tasks.append(
                     self._download(
-                        _epoch,
                         file_basename,
                         link,
                         f"Successfully downloaded {_epoch} file {next(file_counter)}/{len(file_map)}",
