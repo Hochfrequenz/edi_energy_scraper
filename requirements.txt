@@ -42,7 +42,7 @@ packaging==23.2
     # via marshmallow
 pypdf==4.0.1
     # via edi_energy_scraper (pyproject.toml)
-pytz==2023.3.post1
+pytz==2024.1
     # via pandas
 types-pytz==2023.3.1.0
     # via pytz
