@@ -34,7 +34,7 @@ maus==0.4.2
     # via edi_energy_scraper (pyproject.toml)
 more-itertools==10.2.0
     # via maus
-multidict==6.0.4
+multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
