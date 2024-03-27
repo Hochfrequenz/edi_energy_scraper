@@ -8,12 +8,8 @@ build==1.1.1
     # via -r dev_requirements/requirements-test_packaging.in
 certifi==2024.2.2
     # via requests
-cffi==1.16.0
-    # via cryptography
 charset-normalizer==3.3.2
     # via requests
-cryptography==42.0.5
-    # via secretstorage
 docutils==0.20.1
     # via readme-renderer
 idna==3.6
@@ -26,10 +22,6 @@ jaraco-context==4.3.0
     # via keyring
 jaraco-functools==4.0.0
     # via keyring
-jeepney==0.8.0
-    # via
-    #   keyring
-    #   secretstorage
 keyring==25.0.0
     # via twine
 markdown-it-py==3.0.0
@@ -40,14 +32,12 @@ more-itertools==10.2.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-nh3==0.2.15
+nh3==0.2.17
     # via readme-renderer
 packaging==24.0
     # via build
 pkginfo==1.10.0
     # via twine
-pycparser==2.21
-    # via cffi
 pygments==2.17.2
     # via
     #   readme-renderer
@@ -66,8 +56,6 @@ rfc3986==2.0.0
     # via twine
 rich==13.7.1
     # via twine
-secretstorage==3.3.3
-    # via keyring
 twine==5.0.0
     # via -r dev_requirements/requirements-test_packaging.in
 urllib3==2.2.1
