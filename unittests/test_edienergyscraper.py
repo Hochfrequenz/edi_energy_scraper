@@ -209,32 +209,6 @@ class TestEdiEnergyScraper:
         isfile_mocker.assert_called_once_with(ees_dir / "FV2310" / expected_file_name)
 
     @pytest.mark.parametrize(
-        "filename, expected_version",
-        [
-            ("IFTSTAMIG2.0e_20240402_20210929.pdf", EdifactFormatVersion.FV2104),  # Before first threshold
-            ("IFTSTAMIG2.0e_20240402_20210930.pdf", EdifactFormatVersion.FV2104),  # Exactly at first threshold
-            ("IFTSTAMIG2.0e_20240402_20211001.pdf", EdifactFormatVersion.FV2110),  # After first threshold
-            (
-                "UTILMDAHBStrom-informatorischeLesefassung1.1KonsolidierteLesefassungmitFehlerkorrekturenStand12.12.2023_20240402_20231212.docx",
-                EdifactFormatVersion.FV2310,
-            ),  # docx file
-            (
-                "UTILTSMIG-informatorischeLesefassung1.1b_20240402_20231001.docx",
-                EdifactFormatVersion.FV2310,
-            ),
-            ("IFTSTAMIG2.0e_20230331_20230331.pdf", EdifactFormatVersion.FV2210),  # At another threshold
-            ("IFTSTAMIG2.0e_20250930_20250930.pdf", EdifactFormatVersion.FV2504),  # Last threshold
-            ("IFTSTAMIG2.0e_20251001_20251001.pdf", EdifactFormatVersion.FV2510),  # After last threshold
-        ],
-    )
-    def test_get_edifact_version_from_filename(self, filename, expected_version):
-        """
-        Tests the extraction of the edifact format version from the filename.
-        """
-        path: Path = Path(filename)
-        assert get_edifact_version_from_filename(path) == expected_version
-
-    @pytest.mark.parametrize(
         "metadata_has_changed",
         [
             pytest.param(
@@ -500,6 +474,22 @@ class TestEdiEnergyScraper:
             pytest.param("PARTINMIG1.0c_20240331_20241001.pdf", EdifactFormatVersion.FV2410),
             pytest.param("PARTINMIG1.0c_20240331_20250401.pdf", EdifactFormatVersion.FV2504),
             pytest.param("PARTINMIG1.0c_20240331_20251001.pdf", EdifactFormatVersion.FV2510),
+            pytest.param("IFTSTAMIG2.0e_20240402_20210929.pdf", EdifactFormatVersion.FV2104),  # Before first threshold
+            pytest.param(
+                "IFTSTAMIG2.0e_20240402_20210930.pdf", EdifactFormatVersion.FV2104
+            ),  # Exactly at first threshold
+            pytest.param("IFTSTAMIG2.0e_20240402_20211001.pdf", EdifactFormatVersion.FV2110),  # After first threshold
+            pytest.param(
+                "UTILMDAHBStrom-informatorischeLesefassung1.1KonsolidierteLesefassungmitFehlerkorrekturenStand12.12.2023_20240402_20231212.docx",
+                EdifactFormatVersion.FV2310,
+            ),  # docx file
+            pytest.param(
+                "UTILTSMIG-informatorischeLesefassung1.1b_20240402_20231001.docx",
+                EdifactFormatVersion.FV2310,
+            ),
+            pytest.param("IFTSTAMIG2.0e_20230331_20230331.pdf", EdifactFormatVersion.FV2210),  # At another threshold
+            pytest.param("IFTSTAMIG2.0e_20250930_20250930.pdf", EdifactFormatVersion.FV2504),  # Last threshold
+            pytest.param("IFTSTAMIG2.0e_20251001_20251001.pdf", EdifactFormatVersion.FV2510),  # After last threshold
         ],
     )
     def test_get_edifact_version_and_formats(self, input_filename: str, expected_result: EdifactFormatVersion):
