@@ -202,9 +202,11 @@ class TestEdiEnergyScraper:
                     "https://my_file_link.inv/",
                     path_to_mirror_directory=ees_dir,
                 )
-                await ees._download_and_save_pdf(epoch=Epoch.FUTURE, file_basename="my_favourite_ahb", link="foo_bar")
-        assert (ees_dir / "future" / expected_file_name).exists()
-        isfile_mocker.assert_called_once_with(ees_dir / "future" / expected_file_name)
+                await ees._download_and_save_pdf(
+                    epoch=Epoch.FUTURE, file_basename="my_favourite_ahb_20240327", link="foo_bar"
+                )
+        assert (ees_dir / "FV2310" / expected_file_name).exists()
+        isfile_mocker.assert_called_once_with(ees_dir / "FV2310" / expected_file_name)
 
     @pytest.mark.parametrize(
         "filename, expected_version",
