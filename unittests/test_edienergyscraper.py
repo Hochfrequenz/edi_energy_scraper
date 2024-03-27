@@ -6,7 +6,7 @@ from aioresponses import aioresponses
 from bs4 import BeautifulSoup
 from maus.edifact import EdifactFormat, EdifactFormatVersion
 
-from edi_energy_scraper import EdiEnergyScraper, Epoch, get_edifact_version_and_formats
+from edi_energy_scraper import EdiEnergyScraper, Epoch, get_edifact_version_from_filename
 
 
 class TestEdiEnergyScraper:
@@ -205,6 +205,32 @@ class TestEdiEnergyScraper:
                 await ees._download_and_save_pdf(epoch=Epoch.FUTURE, file_basename="my_favourite_ahb", link="foo_bar")
         assert (ees_dir / "future" / expected_file_name).exists()
         isfile_mocker.assert_called_once_with(ees_dir / "future" / expected_file_name)
+
+    @pytest.mark.parametrize(
+        "filename, expected_version",
+        [
+            ("IFTSTAMIG2.0e_20240402_20210929.pdf", EdifactFormatVersion.FV2104),  # Before first threshold
+            ("IFTSTAMIG2.0e_20240402_20210930.pdf", EdifactFormatVersion.FV2104),  # Exactly at first threshold
+            ("IFTSTAMIG2.0e_20240402_20211001.pdf", EdifactFormatVersion.FV2110),  # After first threshold
+            (
+                "UTILMDAHBStrom-informatorischeLesefassung1.1KonsolidierteLesefassungmitFehlerkorrekturenStand12.12.2023_20240402_20231212.docx",
+                EdifactFormatVersion.FV2310,
+            ),  # docx file
+            (
+                "UTILTSMIG-informatorischeLesefassung1.1b_20240402_20231001.docx",
+                EdifactFormatVersion.FV2310,
+            ),
+            ("IFTSTAMIG2.0e_20230331_20230331.pdf", EdifactFormatVersion.FV2210),  # At another threshold
+            ("IFTSTAMIG2.0e_20250930_20250930.pdf", EdifactFormatVersion.FV2504),  # Last threshold
+            ("IFTSTAMIG2.0e_20251001_20251001.pdf", EdifactFormatVersion.FV2510),  # After last threshold
+        ],
+    )
+    def test_get_edifact_version_from_filename(self, filename, expected_version):
+        """
+        Tests the extraction of the edifact format version from the filename.
+        """
+        path: Path = Path(filename)
+        assert get_edifact_version_from_filename(path) == expected_version
 
     @pytest.mark.parametrize(
         "metadata_has_changed",
@@ -512,6 +538,6 @@ class TestEdiEnergyScraper:
         """
         Tests the determination of the edifact format and version for given files
         """
-        actual = get_edifact_version_and_formats(Path(input_filename))
+        actual = get_edifact_version_from_filename(Path(input_filename))
 
         assert actual == expected_result
