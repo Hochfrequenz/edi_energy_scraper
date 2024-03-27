@@ -202,9 +202,7 @@ class TestEdiEnergyScraper:
                     "https://my_file_link.inv/",
                     path_to_mirror_directory=ees_dir,
                 )
-                await ees._download_and_save_pdf(
-                    epoch=Epoch.FUTURE, file_basename="my_favourite_ahb_20240327", link="foo_bar"
-                )
+                await ees._download_and_save_pdf(file_basename="my_favourite_ahb_20240327", link="foo_bar")
         assert (ees_dir / "FV2310" / expected_file_name).exists()
         isfile_mocker.assert_called_once_with(ees_dir / "FV2310" / expected_file_name)
 
@@ -258,9 +256,7 @@ class TestEdiEnergyScraper:
                     "https://my_file_link.inv/",
                     path_to_mirror_directory=ees_dir,
                 )
-                await ees._download_and_save_pdf(
-                    epoch=Epoch.FUTURE, file_basename="my_favourite_ahb_20240327", link="foo_bar.pdf"
-                )
+                await ees._download_and_save_pdf(file_basename="my_favourite_ahb_20240327", link="foo_bar.pdf")
         assert (ees_dir / "FV2310/my_favourite_ahb_20240327.pdf").exists() == metadata_has_changed
         isfile_mocker.assert_called_once_with(ees_dir / "FV2310/my_favourite_ahb_20240327.pdf")
         metadata_mocker.assert_called_once()

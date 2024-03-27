@@ -70,7 +70,7 @@ class EdiEnergyScraper:
         EdiEnergyScraper.remove_comments(soup)
         return soup
 
-    async def _download_and_save_pdf(self, epoch: Epoch, file_basename: str, link: str) -> Path:
+    async def _download_and_save_pdf(self, file_basename: str, link: str) -> Path:
         """
         Downloads a PDF file from a given link and stores it under the file name in a folder that has the same name
         as the directory if the pdf does not exist yet or if the metadata has changed since the last download.
@@ -293,10 +293,10 @@ class EdiEnergyScraper:
         return no_longer_online_files
 
     async def _download(
-        self, epoch: Epoch, file_basename: str, link: str, optional_success_msg: Optional[str] = None
+        self, file_basename: str, link: str, optional_success_msg: Optional[str] = None
     ) -> Optional[Path]:
         try:
-            file_path = await self._download_and_save_pdf(epoch=epoch, file_basename=file_basename, link=link)
+            file_path = await self._download_and_save_pdf(file_basename=file_basename, link=link)
             if optional_success_msg is not None:
                 _logger.debug(optional_success_msg)
         except KeyError as key_error:
@@ -339,7 +339,6 @@ class EdiEnergyScraper:
             for file_basename, link in file_map.items():
                 download_tasks.append(
                     self._download(
-                        _epoch,
                         file_basename,
                         link,
                         f"Successfully downloaded {_epoch} file {next(file_counter)}/{len(file_map)}",
