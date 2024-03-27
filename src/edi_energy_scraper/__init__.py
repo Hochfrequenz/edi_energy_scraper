@@ -70,7 +70,7 @@ class EdiEnergyScraper:
         EdiEnergyScraper.remove_comments(soup)
         return soup
 
-    async def _download_and_save_pdf(self, epoch: Epoch, file_basename: str, link: str) -> Path:
+    async def _download_and_save_pdf(self, file_basename: str, link: str) -> Path:
         """
         Downloads a PDF file from a given link and stores it under the file name in a folder that has the same name
         as the directory if the pdf does not exist yet or if the metadata has changed since the last download.
@@ -96,7 +96,6 @@ class EdiEnergyScraper:
             headers=response.headers, file_basename=file_basename
         )
 
-        file_path = self._get_file_path(file_name=file_name, epoch=epoch)
         for number_of_tries in range(4, 0, -1):
             try:
                 response_content = await response.content.read()
@@ -106,6 +105,10 @@ class EdiEnergyScraper:
                 if number_of_tries <= 0:
                     raise
                 await asyncio.sleep(delay=randint(5, 10))  # cool down...
+
+        file_path = self._get_file_path(file_name=file_name)
+        Path.mkdir(file_path.parent, parents=True, exist_ok=True)
+
         # Save file if it does not exist yet
         if not os.path.isfile(file_path):
             with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
@@ -131,11 +134,12 @@ class EdiEnergyScraper:
             _logger.debug("Meta data haven't changed for %s", file_path)
         return file_path
 
-    def _get_file_path(self, epoch: Epoch, file_name: str) -> Path:
+    def _get_file_path(self, file_name: str) -> Path:
         if "/" in file_name:
             raise ValueError(f"file names must not contain slashes: '{file_name}'")
+        format_version: EdifactFormatVersion = get_edifact_version_from_filename(path=Path(file_name))
         file_path = Path(self._root_dir).joinpath(
-            f"{epoch}/{file_name}"  # e.g "{root_dir}/future/ahbmabis_99991231_20210401.pdf"
+            f"{format_version}/{file_name}"  # e.g "{root_dir}/future/ahbmabis_99991231_20210401.pdf"
         )
 
         return file_path
@@ -289,10 +293,10 @@ class EdiEnergyScraper:
         return no_longer_online_files
 
     async def _download(
-        self, epoch: Epoch, file_basename: str, link: str, optional_success_msg: Optional[str] = None
+        self, file_basename: str, link: str, optional_success_msg: Optional[str] = None
     ) -> Optional[Path]:
         try:
-            file_path = await self._download_and_save_pdf(epoch=epoch, file_basename=file_basename, link=link)
+            file_path = await self._download_and_save_pdf(file_basename=file_basename, link=link)
             if optional_success_msg is not None:
                 _logger.debug(optional_success_msg)
         except KeyError as key_error:
@@ -335,7 +339,6 @@ class EdiEnergyScraper:
             for file_basename, link in file_map.items():
                 download_tasks.append(
                     self._download(
-                        _epoch,
                         file_basename,
                         link,
                         f"Successfully downloaded {_epoch} file {next(file_counter)}/{len(file_map)}",
@@ -349,21 +352,19 @@ class EdiEnergyScraper:
         _logger.info("Finished mirroring")
 
 
-def get_edifact_version_and_formats(path: Path) -> Tuple[EdifactFormatVersion, List[EdifactFormat]]:
+def get_edifact_version_from_filename(path: Path) -> EdifactFormatVersion:
     """
     Determines the edifact formats and the version of a given file.
     A file can describe more than one format (for example APERAK and CONTRL).
     Therefore, a list of all formats described in a file is returned.
+
+    example: 'IFTSTAMIG2.0e_99991231_20231001.pdf' -> FV2310
     """
     filename = path.stem
     date_string = filename.split("_")[-1]  # Assuming date is in the last part of filename
     date_format = "%Y%m%d"
     berlin = pytz.timezone("Europe/Berlin")
     berlin_local_time = datetime.datetime.strptime(date_string, date_format).astimezone(berlin)
-    version = get_edifact_format_version(berlin_local_time)
-    list_of_edifactformats: List[EdifactFormat] = []
-    for entry in EdifactFormat:
-        if str(entry) in filename:
-            list_of_edifactformats.append(entry)
+    format_version = get_edifact_format_version(berlin_local_time)
 
-    return version, list_of_edifactformats
+    return format_version

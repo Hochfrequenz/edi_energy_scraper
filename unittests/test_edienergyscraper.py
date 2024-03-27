@@ -6,7 +6,7 @@ from aioresponses import aioresponses
 from bs4 import BeautifulSoup
 from maus.edifact import EdifactFormat, EdifactFormatVersion
 
-from edi_energy_scraper import EdiEnergyScraper, Epoch, get_edifact_version_and_formats
+from edi_energy_scraper import EdiEnergyScraper, Epoch, get_edifact_version_from_filename
 
 
 class TestEdiEnergyScraper:
@@ -159,12 +159,12 @@ class TestEdiEnergyScraper:
         [
             pytest.param(
                 "example_ahb.pdf",
-                "my_favourite_ahb.pdf",
+                "my_favourite_ahb_20240327.pdf",
                 id="pdf",
             ),
             pytest.param(
                 "Aenderungsantrag_EBD.xlsx",
-                "my_favourite_ahb.xlsx",
+                "my_favourite_ahb_20240327.xlsx",
                 id="xlsx",
             ),
         ],
@@ -202,9 +202,9 @@ class TestEdiEnergyScraper:
                     "https://my_file_link.inv/",
                     path_to_mirror_directory=ees_dir,
                 )
-                await ees._download_and_save_pdf(epoch=Epoch.FUTURE, file_basename="my_favourite_ahb", link="foo_bar")
-        assert (ees_dir / "future" / expected_file_name).exists()
-        isfile_mocker.assert_called_once_with(ees_dir / "future" / expected_file_name)
+                await ees._download_and_save_pdf(file_basename="my_favourite_ahb_20240327", link="foo_bar")
+        assert (ees_dir / "FV2310" / expected_file_name).exists()
+        isfile_mocker.assert_called_once_with(ees_dir / "FV2310" / expected_file_name)
 
     @pytest.mark.parametrize(
         "metadata_has_changed",
@@ -256,15 +256,13 @@ class TestEdiEnergyScraper:
                     "https://my_file_link.inv/",
                     path_to_mirror_directory=ees_dir,
                 )
-                await ees._download_and_save_pdf(
-                    epoch=Epoch.FUTURE, file_basename="my_favourite_ahb", link="foo_bar.pdf"
-                )
-        assert (ees_dir / "future/my_favourite_ahb.pdf").exists() == metadata_has_changed
-        isfile_mocker.assert_called_once_with(ees_dir / "future/my_favourite_ahb.pdf")
+                await ees._download_and_save_pdf(file_basename="my_favourite_ahb_20240327", link="foo_bar.pdf")
+        assert (ees_dir / "FV2310/my_favourite_ahb_20240327.pdf").exists() == metadata_has_changed
+        isfile_mocker.assert_called_once_with(ees_dir / "FV2310/my_favourite_ahb_20240327.pdf")
         metadata_mocker.assert_called_once()
 
         if metadata_has_changed:
-            remove_mocker.assert_called_once_with((ees_dir / "future/my_favourite_ahb.pdf"))
+            remove_mocker.assert_called_once_with((ees_dir / "FV2310/my_favourite_ahb_20240327.pdf"))
 
     @staticmethod
     def _get_soup_mocker(*args, **kwargs):
@@ -292,11 +290,11 @@ class TestEdiEnergyScraper:
     def _get_efm_mocker(*args, **kwargs):
         heading = args[0].find("h2").text
         if heading == "Aktuell gültige Dokumente":
-            return {"xyz": "/a_current_ahb.pdf"}
+            return {"xyz_20240327": "/a_current_ahb.pdf"}
         if heading == "Zukünftige Dokumente":
-            return {"def": "/a_future_ahb.xlsx"}
+            return {"def_20240327": "/a_future_ahb.xlsx"}
         if heading == "Archivierte Dokumente":
-            return {"abc": "/a_past_ahb.pdf"}
+            return {"abc_20240327": "/a_past_ahb.pdf"}
         raise NotImplementedError(f"The case '{heading}' is not implemented in this test.")
 
     @pytest.mark.datafiles(
@@ -325,8 +323,8 @@ class TestEdiEnergyScraper:
         assert (
             ees._root_dir / "future_20210210.html"
         ).exists()  # in general html wont be removed by the function under test
-        path_example_ahb = ees._get_file_path("future", "example_ahb.pdf")
-        path_example_ahb_2 = ees._get_file_path("future", "example_ahb_2.pdf")
+        path_example_ahb = ees._get_file_path("example_ahb_20240327.pdf")
+        path_example_ahb_2 = ees._get_file_path("example_ahb_2_20240327.pdf")
 
         # Verify remove called
         remove_mocker = mocker.patch("edi_energy_scraper.os.remove")
@@ -345,14 +343,14 @@ class TestEdiEnergyScraper:
         [
             pytest.param(
                 {"Content-Disposition": 'attachment; filename="example_ahb.pdf"'},
-                "my_favourite_ahb",
-                "my_favourite_ahb.pdf",
+                "my_favourite_ahb_20240327",
+                "my_favourite_ahb_20240327.pdf",
                 id="pdf",
             ),
             pytest.param(
                 {"Content-Disposition": 'attachment; filename="antrag.xlsx"'},
-                "my_favourite_ahb",
-                "my_favourite_ahb.xlsx",
+                "my_favourite_ahb_20240327",
+                "my_favourite_ahb_20240327.xlsx",
                 id="xlsx",
             ),
         ],
@@ -425,14 +423,14 @@ class TestEdiEnergyScraper:
         assert (ees_dir / "future.html").exists()
         assert (ees_dir / "current.html").exists()
         assert (ees_dir / "past.html").exists()
-        assert (ees_dir / "future" / "def.xlsx").exists()
-        assert (ees_dir / "past" / "abc.pdf").exists()
-        assert (ees_dir / "current" / "xyz.pdf").exists()
+        assert (ees_dir / "FV2310" / "def_20240327.xlsx").exists()
+        assert (ees_dir / "FV2310" / "abc_20240327.pdf").exists()
+        assert (ees_dir / "FV2310" / "xyz_20240327.pdf").exists()
 
         test_new_file_paths: set = {
-            (ees_dir / "future" / "def.xlsx"),
-            (ees_dir / "past" / "abc.pdf"),
-            (ees_dir / "current" / "xyz.pdf"),
+            (ees_dir / "FV2310" / "def_20240327.xlsx"),
+            (ees_dir / "FV2310" / "abc_20240327.pdf"),
+            (ees_dir / "FV2310" / "xyz_20240327.pdf"),
         }
         remove_no_longer_online_files_mocker.assert_called_once_with(test_new_file_paths)
         assert "Downloaded index.html" in caplog.messages
@@ -442,76 +440,58 @@ class TestEdiEnergyScraper:
         [
             pytest.param(
                 "APERAKMIG-informatorischeLesefassung2.1h_99991231_20221001.docx",
-                (EdifactFormatVersion.FV2210, [EdifactFormat.APERAK]),
+                EdifactFormatVersion.FV2210,
             ),
-            pytest.param("COMDISMIG1.0c_20240331_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.COMDIS])),
-            pytest.param("CONTRLMIG2.0b_99991231_20221001.pdf", (EdifactFormatVersion.FV2210, [EdifactFormat.CONTRL])),
+            pytest.param("COMDISMIG1.0c_20240331_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("CONTRLMIG2.0b_99991231_20221001.pdf", EdifactFormatVersion.FV2210),
             pytest.param(
-                "IFTSTAAHB-informatorischeLesefassung2.0e_99991231_20231001.docx",
-                (EdifactFormatVersion.FV2310, [EdifactFormat.IFTSTA]),
+                "IFTSTAAHB-informatorischeLesefassung2.0e_99991231_20231001.docx", EdifactFormatVersion.FV2310
             ),
+            pytest.param("INSRPTAHB1.1g_99991231_20221001.pdf", EdifactFormatVersion.FV2210),
+            pytest.param("INVOICMIG2.8b_20240331_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("MSCONSAHB3.1c_20240331_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("ORDCHGMIG1.1_99991231_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("ORDERSMIG1.3_99991231_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("ORDRSPMIG1.3_99991231_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("PRICATAHB2.0c_20240331_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("QUOTESMIG1.3_99991231_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("REMADVMIG2.9b_20240331_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("REQOTEMIG1.3_99991231_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("UTILMDAHBGas1.0a_99991231_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("UTILTSAHBBerechnungsformel1.0e_20240331_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("APERAKCONTRLAHB2.3m_20240331_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("INVOICREMADVAHB2.5b_20240331_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("ORDERSORDRSPAHBMaBiS2.2c_99991231_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("REQOTEQUOTESORDERSORDRSPORDCHGAHB2.2_99991231_20231001.pdf", EdifactFormatVersion.FV2310),
+            pytest.param("CodelistedereuropäischenLändercodes1.0_99991231_20171001.pdf", EdifactFormatVersion.FV2104),
+            pytest.param("CodelistederZeitreihentypen1.1d_99991231_20211001.pdf", EdifactFormatVersion.FV2110),
+            pytest.param("KostenblattFB1.0b_99991231_20230401.pdf", EdifactFormatVersion.FV2304),
+            pytest.param("PARTINMIG1.0c_20240331_20240403.pdf", EdifactFormatVersion.FV2404),
+            pytest.param("PARTINMIG1.0c_20240331_20241001.pdf", EdifactFormatVersion.FV2410),
+            pytest.param("PARTINMIG1.0c_20240331_20250401.pdf", EdifactFormatVersion.FV2504),
+            pytest.param("PARTINMIG1.0c_20240331_20251001.pdf", EdifactFormatVersion.FV2510),
+            pytest.param("IFTSTAMIG2.0e_20240402_20210929.pdf", EdifactFormatVersion.FV2104),  # Before first threshold
             pytest.param(
-                "INSRPTAHB1.1g_99991231_20221001.pdf",
-                (EdifactFormatVersion.FV2210, [EdifactFormat.INSRPT]),
-            ),
-            pytest.param("INVOICMIG2.8b_20240331_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.INVOIC])),
-            pytest.param("MSCONSAHB3.1c_20240331_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.MSCONS])),
-            pytest.param("ORDCHGMIG1.1_99991231_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.ORDCHG])),
-            pytest.param("ORDERSMIG1.3_99991231_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.ORDERS])),
-            pytest.param("ORDRSPMIG1.3_99991231_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.ORDRSP])),
-            pytest.param("PRICATAHB2.0c_20240331_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.PRICAT])),
-            pytest.param("QUOTESMIG1.3_99991231_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.QUOTES])),
-            pytest.param("REMADVMIG2.9b_20240331_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.REMADV])),
-            pytest.param("REQOTEMIG1.3_99991231_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.REQOTE])),
+                "IFTSTAMIG2.0e_20240402_20210930.pdf", EdifactFormatVersion.FV2104
+            ),  # Exactly at first threshold
+            pytest.param("IFTSTAMIG2.0e_20240402_20211001.pdf", EdifactFormatVersion.FV2110),  # After first threshold
             pytest.param(
-                "UTILMDAHBGas1.0a_99991231_20231001.pdf", (EdifactFormatVersion.FV2310, [EdifactFormat.UTILMD])
-            ),
+                "UTILMDAHBStrom-informatorischeLesefassung1.1KonsolidierteLesefassungmitFehlerkorrekturenStand12.12.2023_20240402_20231212.docx",
+                EdifactFormatVersion.FV2310,
+            ),  # docx file
             pytest.param(
-                "UTILTSAHBBerechnungsformel1.0e_20240331_20231001.pdf",
-                (EdifactFormatVersion.FV2310, [EdifactFormat.UTILTS]),
+                "UTILTSMIG-informatorischeLesefassung1.1b_20240402_20231001.docx",
+                EdifactFormatVersion.FV2310,
             ),
-            pytest.param(
-                "APERAKCONTRLAHB2.3m_20240331_20231001.pdf",
-                (EdifactFormatVersion.FV2310, [EdifactFormat.APERAK, EdifactFormat.CONTRL]),
-            ),
-            pytest.param(
-                "INVOICREMADVAHB2.5b_20240331_20231001.pdf",
-                (EdifactFormatVersion.FV2310, [EdifactFormat.INVOIC, EdifactFormat.REMADV]),
-            ),
-            pytest.param(
-                "ORDERSORDRSPAHBMaBiS2.2c_99991231_20231001.pdf",
-                (EdifactFormatVersion.FV2310, [EdifactFormat.ORDERS, EdifactFormat.ORDRSP]),
-            ),
-            pytest.param(
-                "REQOTEQUOTESORDERSORDRSPORDCHGAHB2.2_99991231_20231001.pdf",
-                (
-                    EdifactFormatVersion.FV2310,
-                    [
-                        EdifactFormat.ORDCHG,
-                        EdifactFormat.ORDERS,
-                        EdifactFormat.ORDRSP,
-                        EdifactFormat.QUOTES,
-                        EdifactFormat.REQOTE,
-                    ],
-                ),
-            ),
-            pytest.param(
-                "CodelistedereuropäischenLändercodes1.0_99991231_20171001.pdf", (EdifactFormatVersion.FV2104, [])
-            ),
-            pytest.param("CodelistederZeitreihentypen1.1d_99991231_20211001.pdf", (EdifactFormatVersion.FV2110, [])),
-            pytest.param("KostenblattFB1.0b_99991231_20230401.pdf", (EdifactFormatVersion.FV2304, [])),
-            pytest.param("PARTINMIG1.0c_20240331_20240403.pdf", (EdifactFormatVersion.FV2404, [EdifactFormat.PARTIN])),
-            pytest.param("PARTINMIG1.0c_20240331_20241001.pdf", (EdifactFormatVersion.FV2410, [EdifactFormat.PARTIN])),
-            pytest.param("PARTINMIG1.0c_20240331_20250401.pdf", (EdifactFormatVersion.FV2504, [EdifactFormat.PARTIN])),
-            pytest.param("PARTINMIG1.0c_20240331_20251001.pdf", (EdifactFormatVersion.FV2510, [EdifactFormat.PARTIN])),
+            pytest.param("IFTSTAMIG2.0e_20230331_20230331.pdf", EdifactFormatVersion.FV2210),  # At another threshold
+            pytest.param("IFTSTAMIG2.0e_20250930_20250930.pdf", EdifactFormatVersion.FV2504),  # Last threshold
+            pytest.param("IFTSTAMIG2.0e_20251001_20251001.pdf", EdifactFormatVersion.FV2510),  # After last threshold
         ],
     )
-    def test_get_edifact_version_and_formats(
-        self, input_filename: str, expected_result: Tuple[EdifactFormatVersion, List[EdifactFormat]]
-    ):
+    def test_get_edifact_version_and_formats(self, input_filename: str, expected_result: EdifactFormatVersion):
         """
         Tests the determination of the edifact format and version for given files
         """
-        actual = get_edifact_version_and_formats(Path(input_filename))
+        actual = get_edifact_version_from_filename(Path(input_filename))
 
         assert actual == expected_result
