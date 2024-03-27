@@ -38,7 +38,7 @@ multidict==6.0.4
     # via
     #   aiohttp
     #   yarl
-packaging==23.2
+packaging==24.0
     # via marshmallow
 pypdf==4.1.0
     # via edi_energy_scraper (pyproject.toml)
