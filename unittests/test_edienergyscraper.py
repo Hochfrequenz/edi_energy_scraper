@@ -502,9 +502,7 @@ class TestEdiEnergyScraper:
             pytest.param("PARTINMIG1.0c_20240331_20251001.pdf", EdifactFormatVersion.FV2510),
         ],
     )
-    def test_get_edifact_version_and_formats(
-        self, input_filename: str, expected_result: Tuple[EdifactFormatVersion, List[EdifactFormat]]
-    ):
+    def test_get_edifact_version_and_formats(self, input_filename: str, expected_result: EdifactFormatVersion):
         """
         Tests the determination of the edifact format and version for given files
         """
