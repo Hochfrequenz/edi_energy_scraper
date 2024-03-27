@@ -38,19 +38,19 @@ maus==0.4.2
     # via edi_energy_scraper (pyproject.toml)
 more-itertools==10.2.0
     # via maus
-multidict==6.0.4
+multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
-packaging==23.2
+packaging==24.0
     # via marshmallow
 pycares==4.4.0
     # via aiodns
 pycparser==2.21
     # via cffi
-pypdf==4.0.1
+pypdf==4.1.0
     # via edi_energy_scraper (pyproject.toml)
-pytz==2023.3.post1
+pytz==2024.1
     # via edi_energy_scraper (pyproject.toml)
 soupsieve==2.5
     # via beautifulsoup4
