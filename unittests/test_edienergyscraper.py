@@ -159,12 +159,12 @@ class TestEdiEnergyScraper:
         [
             pytest.param(
                 "example_ahb.pdf",
-                "my_favourite_ahb.pdf",
+                "my_favourite_ahb_20240327.pdf",
                 id="pdf",
             ),
             pytest.param(
                 "Aenderungsantrag_EBD.xlsx",
-                "my_favourite_ahb.xlsx",
+                "my_favourite_ahb_20240327.xlsx",
                 id="xlsx",
             ),
         ],
