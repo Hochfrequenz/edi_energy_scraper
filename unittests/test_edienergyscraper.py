@@ -285,14 +285,14 @@ class TestEdiEnergyScraper:
                     path_to_mirror_directory=ees_dir,
                 )
                 await ees._download_and_save_pdf(
-                    epoch=Epoch.FUTURE, file_basename="my_favourite_ahb", link="foo_bar.pdf"
+                    epoch=Epoch.FUTURE, file_basename="my_favourite_ahb_20240327", link="foo_bar.pdf"
                 )
-        assert (ees_dir / "future/my_favourite_ahb.pdf").exists() == metadata_has_changed
-        isfile_mocker.assert_called_once_with(ees_dir / "future/my_favourite_ahb.pdf")
+        assert (ees_dir / "FV2310/my_favourite_ahb_20240327.pdf").exists() == metadata_has_changed
+        isfile_mocker.assert_called_once_with(ees_dir / "FV2310/my_favourite_ahb_20240327.pdf")
         metadata_mocker.assert_called_once()
 
         if metadata_has_changed:
-            remove_mocker.assert_called_once_with((ees_dir / "future/my_favourite_ahb.pdf"))
+            remove_mocker.assert_called_once_with((ees_dir / "FV2310/my_favourite_ahb_20240327.pdf"))
 
     @staticmethod
     def _get_soup_mocker(*args, **kwargs):
