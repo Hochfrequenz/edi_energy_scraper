@@ -46,7 +46,7 @@ packaging==24.0
     # via marshmallow
 pycares==4.4.0
     # via aiodns
-pycparser==2.21
+pycparser==2.22
     # via cffi
 pypdf==4.1.0
     # via edi_energy_scraper (pyproject.toml)
