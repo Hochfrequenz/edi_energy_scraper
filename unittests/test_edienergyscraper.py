@@ -163,12 +163,12 @@ class TestEdiEnergyScraper:
         [
             pytest.param(
                 "example_ahb.pdf",
-                "my_favourite_ahb_20240327.pdf",
+                "my_favourite_ahb_20240327_20240327.pdf",
                 id="pdf",
             ),
             pytest.param(
                 "Aenderungsantrag_EBD.xlsx",
-                "my_favourite_ahb_20240327.xlsx",
+                "my_favourite_ahb_20240327_20240327.xlsx",
                 id="xlsx",
             ),
         ],
@@ -206,7 +206,7 @@ class TestEdiEnergyScraper:
                     "https://my_file_link.inv/",
                     path_to_mirror_directory=ees_dir,
                 )
-                await ees._download_and_save_pdf(file_basename="my_favourite_ahb_20240327", link="foo_bar")
+                await ees._download_and_save_pdf(file_basename="my_favourite_ahb_20240327_20240327", link="foo_bar")
         assert (ees_dir / "FV2310" / expected_file_name).exists()
         isfile_mocker.assert_called_once_with(ees_dir / "FV2310" / expected_file_name)
 
@@ -260,13 +260,13 @@ class TestEdiEnergyScraper:
                     "https://my_file_link.inv/",
                     path_to_mirror_directory=ees_dir,
                 )
-                await ees._download_and_save_pdf(file_basename="my_favourite_ahb_20240327", link="foo_bar.pdf")
-        assert (ees_dir / "FV2310/my_favourite_ahb_20240327.pdf").exists() == metadata_has_changed
-        isfile_mocker.assert_called_once_with(ees_dir / "FV2310/my_favourite_ahb_20240327.pdf")
+                await ees._download_and_save_pdf(file_basename="my_favourite_ahb_20240327_20240327", link="foo_bar.pdf")
+        assert (ees_dir / "FV2310/my_favourite_ahb_20240327_20240327.pdf").exists() == metadata_has_changed
+        isfile_mocker.assert_called_once_with(ees_dir / "FV2310/my_favourite_ahb_20240327_20240327.pdf")
         metadata_mocker.assert_called_once()
 
         if metadata_has_changed:
-            remove_mocker.assert_called_once_with((ees_dir / "FV2310/my_favourite_ahb_20240327.pdf"))
+            remove_mocker.assert_called_once_with((ees_dir / "FV2310/my_favourite_ahb_20240327_20240327.pdf"))
 
     @staticmethod
     def _get_soup_mocker(*args, **kwargs):
