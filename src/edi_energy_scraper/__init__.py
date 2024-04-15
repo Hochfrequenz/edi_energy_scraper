@@ -144,6 +144,23 @@ class EdiEnergyScraper:
 
         return file_path
 
+    def _get_file_paths(self, file_name: str) -> list[Path]:
+        """
+        Returns a list of file paths for all valid format versions of a given file.
+        """
+
+        file_paths = []
+
+        format_version_range = get_edifact_format_version_range_from_filename(path=Path(file_name))
+
+        for format_version in format_version_range:
+            file_path = Path(self._root_dir).joinpath(
+                f"{format_version}/{file_name}"  # e.g "{root_dir}/FV2310/ahbmabis_99991231_20210401.pdf"
+            )
+            file_paths.append(file_path)
+
+        return file_paths
+
     @staticmethod
     def _add_file_extension_to_file_basename(headers: dict, file_basename: str) -> str:
         """Extracts the extension of a file from a response header and add it to the file basename."""
