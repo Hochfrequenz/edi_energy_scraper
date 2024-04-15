@@ -1,12 +1,16 @@
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 import pytest
 from aioresponses import aioresponses
 from bs4 import BeautifulSoup
-from maus.edifact import EdifactFormat, EdifactFormatVersion
+from maus.edifact import EdifactFormatVersion
 
-from edi_energy_scraper import EdiEnergyScraper, Epoch, get_edifact_version_from_filename
+from edi_energy_scraper import (
+    EdiEnergyScraper,
+    Epoch,
+    get_edifact_format_version_range_from_filename,
+    get_edifact_version_from_filename,
+)
 
 
 class TestEdiEnergyScraper:
@@ -486,6 +490,10 @@ class TestEdiEnergyScraper:
             pytest.param("IFTSTAMIG2.0e_20230331_20230331.pdf", EdifactFormatVersion.FV2210),  # At another threshold
             pytest.param("IFTSTAMIG2.0e_20250930_20250930.pdf", EdifactFormatVersion.FV2504),  # Last threshold
             pytest.param("IFTSTAMIG2.0e_20251001_20251001.pdf", EdifactFormatVersion.FV2510),  # After last threshold
+            pytest.param(
+                "MSCONSAHB-informatorischeLesefassung3.1cKonsolidierteLesefassungmitFehlerkorrekturenStand12.12.2023_20240331_20231212.docx",
+                EdifactFormatVersion.FV2310,
+            ),  # Error in GH Action
         ],
     )
     def test_get_edifact_version_and_formats(self, input_filename: str, expected_result: EdifactFormatVersion):
@@ -493,5 +501,40 @@ class TestEdiEnergyScraper:
         Tests the determination of the edifact format and version for given files
         """
         actual = get_edifact_version_from_filename(Path(input_filename))
+
+        assert actual == expected_result
+
+    @pytest.mark.parametrize(
+        "input_filename, expected_result",
+        [
+            pytest.param(
+                "REQOTEQUOTESORDERSORDRSPORDCHGAHB-informatorischeLesefassung2.2_99991231_20231001.docx",
+                [
+                    EdifactFormatVersion.FV2310,
+                    EdifactFormatVersion.FV2404,
+                    EdifactFormatVersion.FV2410,
+                    EdifactFormatVersion.FV2504,
+                    EdifactFormatVersion.FV2510,
+                ],
+                id="valid for all format versions from FV2310 to future",
+            ),
+            pytest.param(
+                "REQOTEQUOTESORDERSORDRSPORDCHGAHB-informatorischeLesefassung2.0aKonsolidierteLesefassungmitFehlerkorrekturenStand27.01.2023_20230331_20221001.docx",
+                [EdifactFormatVersion.FV2210],
+                id="valid for one format versions",
+            ),
+            pytest.param(
+                "IFTSTAMIG2.0e_20240930_20231001.pdf",
+                [EdifactFormatVersion.FV2310, EdifactFormatVersion.FV2404],
+                id="valid for two format versions",
+            ),
+        ],
+    )
+    def test_get_edifact_format_version_range(self, input_filename: str, expected_result: list[EdifactFormatVersion]):
+        """
+        Tests the determination of the edifact  version for given files
+        """
+
+        actual = get_edifact_format_version_range_from_filename(path=Path(input_filename))
 
         assert actual == expected_result
