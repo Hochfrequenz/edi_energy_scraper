@@ -6,7 +6,7 @@
 #
 aiodns==3.2.0
     # via aiohttp
-aiohttp[speedups]==3.9.3
+aiohttp[speedups]==3.9.4
     # via
     #   aiohttp-requests
     #   edi_energy_scraper (pyproject.toml)
