@@ -70,7 +70,7 @@ class EdiEnergyScraper:
         EdiEnergyScraper.remove_comments(soup)
         return soup
 
-    async def _download_and_save_pdf(self, file_basename: str, link: str) -> Path:
+    async def _download_and_save_pdf(self, file_basename: str, link: str) -> list[Path]:
         """
         Downloads a PDF file from a given link and stores it under the file name in a folder that has the same name
         as the directory if the pdf does not exist yet or if the metadata has changed since the last download.
@@ -106,33 +106,35 @@ class EdiEnergyScraper:
                     raise
                 await asyncio.sleep(delay=randint(5, 10))  # cool down...
 
-        file_path = self._get_file_path(file_name=file_name)
-        Path.mkdir(file_path.parent, parents=True, exist_ok=True)
+        # file_path = self._get_file_path(file_name=file_name)
+        file_paths = self._get_file_paths(file_name=file_name)
+        for file_path in file_paths:
+            Path.mkdir(file_path.parent, parents=True, exist_ok=True)
 
-        # Save file if it does not exist yet
-        if not os.path.isfile(file_path):
-            with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
-                _logger.debug("Saving new PDF %s", file_path)
-                outfile.write(response_content)
-            return file_path
+            # Save file if it does not exist yet
+            if not os.path.isfile(file_path):
+                with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
+                    _logger.debug("Saving new PDF %s", file_path)
+                    outfile.write(response_content)
+                continue
 
-        # First fix, different file types do just the same as before, only with correct file extension
-        if not file_name.endswith(".pdf"):
-            with open(file_path, "wb+") as outfile:
-                _logger.debug("Saving %s", file_path)
-                outfile.write(response_content)
-            return file_path
+            # First fix, different file types do just the same as before, only with correct file extension
+            if not file_name.endswith(".pdf"):
+                with open(file_path, "wb+") as outfile:
+                    _logger.debug("Saving %s", file_path)
+                    outfile.write(response_content)
+                continue
 
-        # Check if metadata has changed
-        metadata_has_changed = self._have_different_metadata(response_content, file_path)
-        if metadata_has_changed:  # delete old file and replace with new one
-            _logger.debug("Metadata for PDF %s changed; Replacing it", file_path)
-            os.remove(file_path)
-            with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
-                outfile.write(response_content)
-        else:
-            _logger.debug("Meta data haven't changed for %s", file_path)
-        return file_path
+            # Check if metadata has changed
+            metadata_has_changed = self._have_different_metadata(response_content, file_path)
+            if metadata_has_changed:  # delete old file and replace with new one
+                _logger.debug("Metadata for PDF %s changed; Replacing it", file_path)
+                os.remove(file_path)
+                with open(file_path, "wb+") as outfile:  # pdfs are written as binaries
+                    outfile.write(response_content)
+            else:
+                _logger.debug("Meta data haven't changed for %s", file_path)
+        return file_paths
 
     def _get_file_path(self, file_name: str) -> Path:
         if "/" in file_name:
@@ -311,7 +313,7 @@ class EdiEnergyScraper:
 
     async def _download(
         self, file_basename: str, link: str, optional_success_msg: Optional[str] = None
-    ) -> Optional[Path]:
+    ) -> Optional[list[Path]]:
         try:
             file_path = await self._download_and_save_pdf(file_basename=file_basename, link=link)
             if optional_success_msg is not None:
@@ -351,7 +353,7 @@ class EdiEnergyScraper:
             with open(epoch_path, "w+", encoding="utf8") as outfile:
                 outfile.write(epoch_soup.prettify())
             file_map = EdiEnergyScraper.get_epoch_file_map(epoch_soup)
-            download_tasks: List[Awaitable[Optional[Path]]] = []
+            download_tasks: List[Awaitable[Optional[list[Path]]]] = []
             file_counter = itertools.count()
             for file_basename, link in file_map.items():
                 download_tasks.append(
@@ -361,10 +363,10 @@ class EdiEnergyScraper:
                         f"Successfully downloaded {_epoch} file {next(file_counter)}/{len(file_map)}",
                     )
                 )
-            download_results: List[Optional[Path]] = await asyncio.gather(*download_tasks)
+            download_results: List[Optional[list[Path]]] = await asyncio.gather(*download_tasks)
             for download_result in download_results:
                 if download_result is not None:
-                    new_file_paths.add(download_result)
+                    new_file_paths.update(download_result)
         self.remove_no_longer_online_files(new_file_paths)
         _logger.info("Finished mirroring")
 
