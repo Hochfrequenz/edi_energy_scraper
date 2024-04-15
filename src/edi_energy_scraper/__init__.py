@@ -368,3 +368,62 @@ def get_edifact_version_from_filename(path: Path) -> EdifactFormatVersion:
     format_version = get_edifact_format_version(berlin_local_time)
 
     return format_version
+
+
+def get_publication_date_from_filename(path: Path) -> datetime.datetime:
+    """
+    Determines the publication date of a given file.
+    """
+    filename = path.stem
+    date_string = filename.split("_")[-1]  # Assuming date is in the last part of filename
+    date_format = "%Y%m%d"
+    berlin = pytz.timezone("Europe/Berlin")
+    berlin_local_time = datetime.datetime.strptime(date_string, date_format).astimezone(berlin)
+
+    return berlin_local_time
+
+
+def get_valid_to_date_from_filename(path: Path) -> datetime.datetime:
+    """
+    Determines the valid to date of a given file.
+    """
+    filename = path.stem
+    date_string = filename.split("_")[-2]  # Assuming date is in the second last part of filename
+
+    if date_string == "99991231":
+        return datetime.datetime(9999, 12, 31, tzinfo=datetime.timezone.utc)
+
+    date_format = "%Y%m%d"
+    berlin = pytz.timezone("Europe/Berlin")
+    berlin_local_time = datetime.datetime.strptime(date_string, date_format).astimezone(berlin)
+
+    return berlin_local_time
+
+
+def get_edifact_format_version_range_from_filename(path: Path) -> list[EdifactFormatVersion]:
+    """
+    Determines range of valid format versions of a given file.
+    A document can be valid for multiple format versions.
+    Therefore, a list of all valid format versions is returned.
+
+    example:
+      - 'IFTSTAMIG2.0e_20240930_20231001.pdf' -> [FV2310, FV2404]
+      - 'IFTSTAMIG2.0e_99991231_20231001.pdf' -> [FV2310, FV2404, ...]  all future format versions
+    """
+
+    publication_date: datetime.datetime = get_publication_date_from_filename(path)
+    valid_to_date: datetime.datetime = get_valid_to_date_from_filename(path)
+
+    format_version_start = get_edifact_format_version(publication_date)
+    format_version_end = get_edifact_format_version(valid_to_date)
+
+    format_versions = [efv.value for efv in EdifactFormatVersion]
+
+    format_version_range = [
+        EdifactFormatVersion(format_version)
+        for format_version in format_versions[
+            format_versions.index(format_version_start.value) : format_versions.index(format_version_end.value) + 1
+        ]
+    ]
+
+    return format_version_range
