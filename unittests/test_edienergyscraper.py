@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List
 
 import pytest
 from aioresponses import aioresponses
@@ -528,7 +529,7 @@ class TestEdiEnergyScraper:
             ),
         ],
     )
-    def test_get_edifact_format_version_range(self, input_filename: str, expected_result: list[EdifactFormatVersion]):
+    def test_get_edifact_format_version_range(self, input_filename: str, expected_result: List[EdifactFormatVersion]):
         """
         Tests the determination of the edifact  version for given files
         """

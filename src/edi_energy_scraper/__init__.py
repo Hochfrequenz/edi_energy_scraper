@@ -145,7 +145,7 @@ class EdiEnergyScraper:
 
         return file_path
 
-    def _get_file_paths(self, file_name: str) -> list[Path]:
+    def _get_file_paths(self, file_name: str) -> List[Path]:
         """
         Returns a list of file paths for all valid format versions of a given file.
         """
@@ -312,7 +312,7 @@ class EdiEnergyScraper:
 
     async def _download(
         self, file_basename: str, link: str, optional_success_msg: Optional[str] = None
-    ) -> Optional[list[Path]]:
+    ) -> Optional[List[Path]]:
         try:
             file_path = await self._download_and_save_pdf(file_basename=file_basename, link=link)
             if optional_success_msg is not None:
@@ -352,7 +352,7 @@ class EdiEnergyScraper:
             with open(epoch_path, "w+", encoding="utf8") as outfile:
                 outfile.write(epoch_soup.prettify())
             file_map = EdiEnergyScraper.get_epoch_file_map(epoch_soup)
-            download_tasks: List[Awaitable[Optional[list[Path]]]] = []
+            download_tasks: List[Awaitable[Optional[List[Path]]]] = []
             file_counter = itertools.count()
             for file_basename, link in file_map.items():
                 download_tasks.append(
@@ -362,7 +362,7 @@ class EdiEnergyScraper:
                         f"Successfully downloaded {_epoch} file {next(file_counter)}/{len(file_map)}",
                     )
                 )
-            download_results: List[Optional[list[Path]]] = await asyncio.gather(*download_tasks)
+            download_results: List[Optional[List[Path]]] = await asyncio.gather(*download_tasks)
             for download_result in download_results:
                 if download_result is not None:
                     new_file_paths.update(download_result)
@@ -437,7 +437,7 @@ def get_next_format_version() -> EdifactFormatVersion:
     return EdifactFormatVersion(next_format_version)
 
 
-def get_edifact_format_version_range_from_filename(path: Path) -> list[EdifactFormatVersion]:
+def get_edifact_format_version_range_from_filename(path: Path) -> List[EdifactFormatVersion]:
     """
     Determines range of valid format versions of a given file.
     A document can be valid for multiple format versions.
