@@ -294,11 +294,11 @@ class TestEdiEnergyScraper:
     def _get_efm_mocker(*args, **kwargs):
         heading = args[0].find("h2").text
         if heading == "Aktuell gültige Dokumente":
-            return {"xyz_20240327": "/a_current_ahb.pdf"}
+            return {"xyz_20240327_20240327": "/a_current_ahb.pdf"}
         if heading == "Zukünftige Dokumente":
-            return {"def_20240327": "/a_future_ahb.xlsx"}
+            return {"def_20240327_20240327": "/a_future_ahb.xlsx"}
         if heading == "Archivierte Dokumente":
-            return {"abc_20240327": "/a_past_ahb.pdf"}
+            return {"abc_20240327_20240327": "/a_past_ahb.pdf"}
         raise NotImplementedError(f"The case '{heading}' is not implemented in this test.")
 
     @pytest.mark.datafiles(
@@ -427,14 +427,14 @@ class TestEdiEnergyScraper:
         assert (ees_dir / "future.html").exists()
         assert (ees_dir / "current.html").exists()
         assert (ees_dir / "past.html").exists()
-        assert (ees_dir / "FV2310" / "def_20240327.xlsx").exists()
-        assert (ees_dir / "FV2310" / "abc_20240327.pdf").exists()
-        assert (ees_dir / "FV2310" / "xyz_20240327.pdf").exists()
+        assert (ees_dir / "FV2310" / "def_20240327_20240327.xlsx").exists()
+        assert (ees_dir / "FV2310" / "abc_20240327_20240327.pdf").exists()
+        assert (ees_dir / "FV2310" / "xyz_20240327_20240327.pdf").exists()
 
         test_new_file_paths: set = {
-            (ees_dir / "FV2310" / "def_20240327.xlsx"),
-            (ees_dir / "FV2310" / "abc_20240327.pdf"),
-            (ees_dir / "FV2310" / "xyz_20240327.pdf"),
+            (ees_dir / "FV2310" / "def_20240327_20240327.xlsx"),
+            (ees_dir / "FV2310" / "abc_20240327_20240327.pdf"),
+            (ees_dir / "FV2310" / "xyz_20240327_20240327.pdf"),
         }
         remove_no_longer_online_files_mocker.assert_called_once_with(test_new_file_paths)
         assert "Downloaded index.html" in caplog.messages
