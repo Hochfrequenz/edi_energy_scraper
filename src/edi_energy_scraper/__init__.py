@@ -106,7 +106,6 @@ class EdiEnergyScraper:
                     raise
                 await asyncio.sleep(delay=randint(5, 10))  # cool down...
 
-        # file_path = self._get_file_path(file_name=file_name)
         file_paths = self._get_file_paths(file_name=file_name)
         for file_path in file_paths:
             Path.mkdir(file_path.parent, parents=True, exist_ok=True)
