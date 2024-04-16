@@ -12,7 +12,7 @@ import re
 from email.message import Message
 from pathlib import Path
 from random import randint
-from typing import Awaitable, Dict, List, Optional, Set, Tuple, Union
+from typing import Awaitable, Dict, List, Optional, Set, Union
 
 import aiohttp
 import pytz
@@ -394,7 +394,7 @@ def get_publication_date_from_filename(path: Path) -> datetime.datetime:
     Determines the publication date of a given file.
     """
     filename = path.stem
-    date_string = filename.split("_")[-1]  # Assuming date is in the last part of filename
+    date_string = filename.split("_")[-1]  # Assuming date is the "publication date"
     date_format = "%Y%m%d"
     berlin = pytz.timezone("Europe/Berlin")
     berlin_local_time = datetime.datetime.strptime(date_string, date_format).astimezone(berlin)
@@ -407,7 +407,7 @@ def get_valid_to_date_from_filename(path: Path) -> datetime.datetime:
     Determines the valid to date of a given file.
     """
     filename = path.stem
-    date_string = filename.split("_")[-2]  # Assuming date is in the second last part of filename
+    date_string = filename.split("_")[-2]  # Assuming date is the "valid to" date
 
     if date_string == "99991231":
         return datetime.datetime(9999, 12, 31, tzinfo=datetime.timezone.utc)
@@ -417,6 +417,25 @@ def get_valid_to_date_from_filename(path: Path) -> datetime.datetime:
     berlin_local_time = datetime.datetime.strptime(date_string, date_format).astimezone(berlin)
 
     return berlin_local_time
+
+
+def get_current_format_version() -> EdifactFormatVersion:
+    """
+    Determines the current format version.
+    """
+    return get_edifact_format_version(datetime.datetime.now(tz=datetime.timezone.utc))
+
+
+def get_next_format_version() -> EdifactFormatVersion:
+    """
+    Determines the next format version.
+    """
+    current_format_version = get_edifact_format_version(datetime.datetime.now(tz=datetime.timezone.utc))
+
+    format_versions = [efv.value for efv in EdifactFormatVersion]
+    next_format_version = format_versions[format_versions.index(current_format_version.value) + 1]
+
+    return EdifactFormatVersion(next_format_version)
 
 
 def get_edifact_format_version_range_from_filename(path: Path) -> list[EdifactFormatVersion]:
@@ -433,8 +452,15 @@ def get_edifact_format_version_range_from_filename(path: Path) -> list[EdifactFo
     publication_date: datetime.datetime = get_publication_date_from_filename(path)
     valid_to_date: datetime.datetime = get_valid_to_date_from_filename(path)
 
+    next_format_version = get_next_format_version()
+
     format_version_start = get_edifact_format_version(publication_date)
+
     format_version_end = get_edifact_format_version(valid_to_date)
+
+    is_format_version_end_greater_than_next_format_version = format_version_end > next_format_version
+    if is_format_version_end_greater_than_next_format_version:
+        format_version_end = next_format_version
 
     format_versions = [efv.value for efv in EdifactFormatVersion]
 
