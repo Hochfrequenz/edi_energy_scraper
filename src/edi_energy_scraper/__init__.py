@@ -393,12 +393,12 @@ def get_publication_date_from_filename(path: Path) -> datetime.datetime:
     Determines the publication date of a given file.
     """
     filename = path.stem
-    date_string = filename.split("_")[-1]  # Assuming date is the "publication date"
+    publication_date_string = filename.split("_")[-1]  # Assuming date is the "publication date"
     date_format = "%Y%m%d"
     berlin = pytz.timezone("Europe/Berlin")
-    berlin_local_time = datetime.datetime.strptime(date_string, date_format).astimezone(berlin)
+    publication_date = datetime.datetime.strptime(publication_date_string, date_format).astimezone(berlin)
 
-    return berlin_local_time
+    return publication_date
 
 
 def get_valid_to_date_from_filename(path: Path) -> datetime.datetime:
@@ -406,16 +406,16 @@ def get_valid_to_date_from_filename(path: Path) -> datetime.datetime:
     Determines the valid to date of a given file.
     """
     filename = path.stem
-    date_string = filename.split("_")[-2]  # Assuming date is the "valid to" date
+    valid_to_date_string = filename.split("_")[-2]  # Assuming date is the "valid to" date
 
-    if date_string == "99991231":
+    if valid_to_date_string == "99991231":
         return datetime.datetime(9999, 12, 31, tzinfo=datetime.timezone.utc)
 
     date_format = "%Y%m%d"
     berlin = pytz.timezone("Europe/Berlin")
-    berlin_local_time = datetime.datetime.strptime(date_string, date_format).astimezone(berlin)
+    valid_to_date = datetime.datetime.strptime(valid_to_date_string, date_format).astimezone(berlin)
 
-    return berlin_local_time
+    return valid_to_date
 
 
 def get_current_format_version() -> EdifactFormatVersion:
