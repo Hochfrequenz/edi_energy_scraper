@@ -1,12 +1,17 @@
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List
 
 import pytest
 from aioresponses import aioresponses
 from bs4 import BeautifulSoup
-from maus.edifact import EdifactFormat, EdifactFormatVersion
+from maus.edifact import EdifactFormatVersion
 
-from edi_energy_scraper import EdiEnergyScraper, Epoch, get_edifact_version_from_filename
+from edi_energy_scraper import (
+    EdiEnergyScraper,
+    Epoch,
+    get_edifact_format_version_range_from_filename,
+    get_edifact_version_from_filename,
+)
 
 
 class TestEdiEnergyScraper:
@@ -159,12 +164,12 @@ class TestEdiEnergyScraper:
         [
             pytest.param(
                 "example_ahb.pdf",
-                "my_favourite_ahb_20240327.pdf",
+                "my_favourite_ahb_20240327_20240327.pdf",
                 id="pdf",
             ),
             pytest.param(
                 "Aenderungsantrag_EBD.xlsx",
-                "my_favourite_ahb_20240327.xlsx",
+                "my_favourite_ahb_20240327_20240327.xlsx",
                 id="xlsx",
             ),
         ],
@@ -202,7 +207,7 @@ class TestEdiEnergyScraper:
                     "https://my_file_link.inv/",
                     path_to_mirror_directory=ees_dir,
                 )
-                await ees._download_and_save_pdf(file_basename="my_favourite_ahb_20240327", link="foo_bar")
+                await ees._download_and_save_pdf(file_basename="my_favourite_ahb_20240327_20240327", link="foo_bar")
         assert (ees_dir / "FV2310" / expected_file_name).exists()
         isfile_mocker.assert_called_once_with(ees_dir / "FV2310" / expected_file_name)
 
@@ -256,13 +261,13 @@ class TestEdiEnergyScraper:
                     "https://my_file_link.inv/",
                     path_to_mirror_directory=ees_dir,
                 )
-                await ees._download_and_save_pdf(file_basename="my_favourite_ahb_20240327", link="foo_bar.pdf")
-        assert (ees_dir / "FV2310/my_favourite_ahb_20240327.pdf").exists() == metadata_has_changed
-        isfile_mocker.assert_called_once_with(ees_dir / "FV2310/my_favourite_ahb_20240327.pdf")
+                await ees._download_and_save_pdf(file_basename="my_favourite_ahb_20240327_20240327", link="foo_bar.pdf")
+        assert (ees_dir / "FV2310/my_favourite_ahb_20240327_20240327.pdf").exists() == metadata_has_changed
+        isfile_mocker.assert_called_once_with(ees_dir / "FV2310/my_favourite_ahb_20240327_20240327.pdf")
         metadata_mocker.assert_called_once()
 
         if metadata_has_changed:
-            remove_mocker.assert_called_once_with((ees_dir / "FV2310/my_favourite_ahb_20240327.pdf"))
+            remove_mocker.assert_called_once_with((ees_dir / "FV2310/my_favourite_ahb_20240327_20240327.pdf"))
 
     @staticmethod
     def _get_soup_mocker(*args, **kwargs):
@@ -290,11 +295,11 @@ class TestEdiEnergyScraper:
     def _get_efm_mocker(*args, **kwargs):
         heading = args[0].find("h2").text
         if heading == "Aktuell gültige Dokumente":
-            return {"xyz_20240327": "/a_current_ahb.pdf"}
+            return {"xyz_20240327_20240327": "/a_current_ahb.pdf"}
         if heading == "Zukünftige Dokumente":
-            return {"def_20240327": "/a_future_ahb.xlsx"}
+            return {"def_20240327_20240327": "/a_future_ahb.xlsx"}
         if heading == "Archivierte Dokumente":
-            return {"abc_20240327": "/a_past_ahb.pdf"}
+            return {"abc_20240327_20240327": "/a_past_ahb.pdf"}
         raise NotImplementedError(f"The case '{heading}' is not implemented in this test.")
 
     @pytest.mark.datafiles(
@@ -423,14 +428,14 @@ class TestEdiEnergyScraper:
         assert (ees_dir / "future.html").exists()
         assert (ees_dir / "current.html").exists()
         assert (ees_dir / "past.html").exists()
-        assert (ees_dir / "FV2310" / "def_20240327.xlsx").exists()
-        assert (ees_dir / "FV2310" / "abc_20240327.pdf").exists()
-        assert (ees_dir / "FV2310" / "xyz_20240327.pdf").exists()
+        assert (ees_dir / "FV2310" / "def_20240327_20240327.xlsx").exists()
+        assert (ees_dir / "FV2310" / "abc_20240327_20240327.pdf").exists()
+        assert (ees_dir / "FV2310" / "xyz_20240327_20240327.pdf").exists()
 
         test_new_file_paths: set = {
-            (ees_dir / "FV2310" / "def_20240327.xlsx"),
-            (ees_dir / "FV2310" / "abc_20240327.pdf"),
-            (ees_dir / "FV2310" / "xyz_20240327.pdf"),
+            (ees_dir / "FV2310" / "def_20240327_20240327.xlsx"),
+            (ees_dir / "FV2310" / "abc_20240327_20240327.pdf"),
+            (ees_dir / "FV2310" / "xyz_20240327_20240327.pdf"),
         }
         remove_no_longer_online_files_mocker.assert_called_once_with(test_new_file_paths)
         assert "Downloaded index.html" in caplog.messages
@@ -486,6 +491,10 @@ class TestEdiEnergyScraper:
             pytest.param("IFTSTAMIG2.0e_20230331_20230331.pdf", EdifactFormatVersion.FV2210),  # At another threshold
             pytest.param("IFTSTAMIG2.0e_20250930_20250930.pdf", EdifactFormatVersion.FV2504),  # Last threshold
             pytest.param("IFTSTAMIG2.0e_20251001_20251001.pdf", EdifactFormatVersion.FV2510),  # After last threshold
+            pytest.param(
+                "MSCONSAHB-informatorischeLesefassung3.1cKonsolidierteLesefassungmitFehlerkorrekturenStand12.12.2023_20240331_20231212.docx",
+                EdifactFormatVersion.FV2310,
+            ),  # Error in GH Action
         ],
     )
     def test_get_edifact_version_and_formats(self, input_filename: str, expected_result: EdifactFormatVersion):
@@ -493,5 +502,38 @@ class TestEdiEnergyScraper:
         Tests the determination of the edifact format and version for given files
         """
         actual = get_edifact_version_from_filename(Path(input_filename))
+
+        assert actual == expected_result
+
+    @pytest.mark.parametrize(
+        "input_filename, expected_result",
+        [
+            pytest.param(
+                "REQOTEQUOTESORDERSORDRSPORDCHGAHB-informatorischeLesefassung2.2_99991231_20231001.docx",
+                [
+                    EdifactFormatVersion.FV2310,
+                    EdifactFormatVersion.FV2404,
+                    EdifactFormatVersion.FV2410,
+                ],
+                id="valid for all format versions from FV2310 to future",
+            ),
+            pytest.param(
+                "REQOTEQUOTESORDERSORDRSPORDCHGAHB-informatorischeLesefassung2.0aKonsolidierteLesefassungmitFehlerkorrekturenStand27.01.2023_20230331_20221001.docx",
+                [EdifactFormatVersion.FV2210],
+                id="valid for one format versions",
+            ),
+            pytest.param(
+                "IFTSTAMIG2.0e_20240930_20231001.pdf",
+                [EdifactFormatVersion.FV2310, EdifactFormatVersion.FV2404],
+                id="valid for two format versions",
+            ),
+        ],
+    )
+    def test_get_edifact_format_version_range(self, input_filename: str, expected_result: List[EdifactFormatVersion]):
+        """
+        Tests the determination of the edifact  version for given files
+        """
+
+        actual = get_edifact_format_version_range_from_filename(path=Path(input_filename))
 
         assert actual == expected_result
