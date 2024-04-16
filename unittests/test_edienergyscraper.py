@@ -513,8 +513,6 @@ class TestEdiEnergyScraper:
                     EdifactFormatVersion.FV2310,
                     EdifactFormatVersion.FV2404,
                     EdifactFormatVersion.FV2410,
-                    EdifactFormatVersion.FV2504,
-                    EdifactFormatVersion.FV2510,
                 ],
                 id="valid for all format versions from FV2310 to future",
             ),
