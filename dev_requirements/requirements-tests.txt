@@ -26,9 +26,9 @@ multidict==6.0.5
     #   yarl
 packaging==24.0
     # via pytest
-pluggy==1.4.0
+pluggy==1.5.0
     # via pytest
-pytest==8.1.1
+pytest==8.2.0
     # via
     #   -r dev_requirements/requirements-tests.in
     #   pytest-asyncio
