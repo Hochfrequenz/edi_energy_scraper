@@ -32,7 +32,7 @@ frozenlist==1.4.1
     #   aiosignal
 idna==3.7
     # via yarl
-marshmallow==3.21.2
+marshmallow==3.21.3
     # via maus
 maus==0.5.0
     # via edi_energy_scraper (pyproject.toml)
