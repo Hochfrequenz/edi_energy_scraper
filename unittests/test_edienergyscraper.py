@@ -490,7 +490,7 @@ class TestEdiEnergyScraper:
             ),
             pytest.param("IFTSTAMIG2.0e_20230331_20230331.pdf", EdifactFormatVersion.FV2210),  # At another threshold
             pytest.param("IFTSTAMIG2.0e_20250930_20250930.pdf", EdifactFormatVersion.FV2504),  # Last threshold
-            pytest.param("IFTSTAMIG2.0e_20251001_20251001.pdf", EdifactFormatVersion.FV2510),  # After last threshold
+            pytest.param("IFTSTAMIG2.0e_20251001_20251001.pdf", EdifactFormatVersion.FV2504),  # After last threshold
             pytest.param(
                 "MSCONSAHB-informatorischeLesefassung3.1cKonsolidierteLesefassungmitFehlerkorrekturenStand12.12.2023_20240331_20231212.docx",
                 EdifactFormatVersion.FV2310,
