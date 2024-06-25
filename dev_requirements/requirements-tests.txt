@@ -12,6 +12,10 @@ aiosignal==1.3.1
     # via aiohttp
 attrs==23.2.0
     # via aiohttp
+colorama==0.4.6
+    # via pytest
+freezegun==1.5.1
+    # via -r dev_requirements/requirements-tests.in
 frozenlist==1.4.1
     # via
     #   aiohttp
@@ -40,5 +44,9 @@ pytest-datafiles==3.0.0
     # via -r dev_requirements/requirements-tests.in
 pytest-mock==3.14.0
     # via -r dev_requirements/requirements-tests.in
+python-dateutil==2.9.0.post0
+    # via freezegun
+six==1.16.0
+    # via python-dateutil
 yarl==1.9.4
     # via aiohttp

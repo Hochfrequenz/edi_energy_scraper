@@ -4,6 +4,7 @@ from typing import List
 import pytest
 from aioresponses import aioresponses
 from bs4 import BeautifulSoup
+from freezegun import freeze_time
 from maus.edifact import EdifactFormatVersion
 
 from edi_energy_scraper import (
@@ -505,6 +506,7 @@ class TestEdiEnergyScraper:
 
         assert actual == expected_result
 
+    @freeze_time("2024-06-25")
     @pytest.mark.parametrize(
         "input_filename, expected_result",
         [
@@ -526,6 +528,16 @@ class TestEdiEnergyScraper:
                 "IFTSTAMIG2.0e_20240930_20231001.pdf",
                 [EdifactFormatVersion.FV2310, EdifactFormatVersion.FV2404],
                 id="valid for two format versions",
+            ),
+            pytest.param(
+                "IFTSTAMIG2.0e_20280930_20231001.pdf",
+                [EdifactFormatVersion.FV2310, EdifactFormatVersion.FV2404, EdifactFormatVersion.FV2410],
+                id="valid in future, starting in past",
+            ),
+            pytest.param(
+                "IFTSTAMIG2.0e_20280930_20250404.pdf",
+                [EdifactFormatVersion.FV2504],
+                id="starting in future",
             ),
         ],
     )
