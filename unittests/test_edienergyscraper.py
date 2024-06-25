@@ -473,7 +473,7 @@ class TestEdiEnergyScraper:
             pytest.param("KostenblattFB1.0b_99991231_20230401.pdf", EdifactFormatVersion.FV2304),
             pytest.param("PARTINMIG1.0c_20240331_20240403.pdf", EdifactFormatVersion.FV2404),
             pytest.param("PARTINMIG1.0c_20240331_20241001.pdf", EdifactFormatVersion.FV2410),
-            pytest.param("PARTINMIG1.0c_20240331_20250401.pdf", EdifactFormatVersion.FV2504),
+            pytest.param("PARTINMIG1.0c_20240331_20250404.pdf", EdifactFormatVersion.FV2504),
             pytest.param("PARTINMIG1.0c_20240331_20251001.pdf", EdifactFormatVersion.FV2510),
             pytest.param("IFTSTAMIG2.0e_20240402_20210929.pdf", EdifactFormatVersion.FV2104),  # Before first threshold
             pytest.param(
@@ -490,7 +490,7 @@ class TestEdiEnergyScraper:
             ),
             pytest.param("IFTSTAMIG2.0e_20230331_20230331.pdf", EdifactFormatVersion.FV2210),  # At another threshold
             pytest.param("IFTSTAMIG2.0e_20250930_20250930.pdf", EdifactFormatVersion.FV2504),  # Last threshold
-            pytest.param("IFTSTAMIG2.0e_20251001_20251001.pdf", EdifactFormatVersion.FV2504),  # After last threshold
+            pytest.param("IFTSTAMIG2.0e_20251001_20251001.pdf", EdifactFormatVersion.FV2510),  # After last threshold
             pytest.param(
                 "MSCONSAHB-informatorischeLesefassung3.1cKonsolidierteLesefassungmitFehlerkorrekturenStand12.12.2023_20240331_20231212.docx",
                 EdifactFormatVersion.FV2310,
