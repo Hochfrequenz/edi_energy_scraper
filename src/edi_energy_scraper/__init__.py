@@ -459,7 +459,12 @@ def get_edifact_format_version_range_from_filename(path: Path) -> List[EdifactFo
 
     is_format_version_end_greater_than_next_format_version = format_version_end > next_format_version
     if is_format_version_end_greater_than_next_format_version:
-        format_version_end = next_format_version
+        # files which have been published earlier and not been replaced yet are used until the next format version
+        if format_version_start < next_format_version:
+            format_version_end = next_format_version
+        # new documents which are not valdi yet are used for the future format version
+        else:
+            format_version_end = format_version_start
 
     format_versions = [efv.value for efv in EdifactFormatVersion]
 
