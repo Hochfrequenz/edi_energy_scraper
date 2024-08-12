@@ -30,7 +30,7 @@ idna==3.7
     # via yarl
 marshmallow==3.21.3
     # via maus
-maus==0.5.3
+maus==0.6.0
     # via edi_energy_scraper (pyproject.toml)
 more-itertools==10.4.0
     # via maus
