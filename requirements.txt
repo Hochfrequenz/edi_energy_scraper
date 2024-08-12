@@ -32,7 +32,7 @@ marshmallow==3.21.3
     # via maus
 maus==0.5.3
     # via edi_energy_scraper (pyproject.toml)
-more-itertools==10.3.0
+more-itertools==10.4.0
     # via maus
 multidict==6.0.5
     # via
