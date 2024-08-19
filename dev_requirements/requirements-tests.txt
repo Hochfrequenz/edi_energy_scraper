@@ -4,7 +4,9 @@
 #
 #    pip-compile dev_requirements/requirements-tests.in
 #
-aiohttp==3.9.5
+aiohappyeyeballs==2.4.0
+    # via aiohttp
+aiohttp==3.10.4
     # via aioresponses
 aioresponses==0.7.6
     # via -r dev_requirements/requirements-tests.in
