@@ -19,7 +19,7 @@ import pytz
 from aiohttp import ServerDisconnectedError
 from aiohttp_requests import Requests  # type:ignore[import]
 from bs4 import BeautifulSoup, Comment  # type:ignore[import]
-from maus.edifact import EdifactFormat, EdifactFormatVersion, get_edifact_format_version
+from efoli import EdifactFormatVersion, get_edifact_format_version
 from pypdf import PdfReader
 
 from edi_energy_scraper.epoch import Epoch
