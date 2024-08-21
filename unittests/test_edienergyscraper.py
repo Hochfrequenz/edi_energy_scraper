@@ -4,8 +4,8 @@ from typing import List
 import pytest
 from aioresponses import aioresponses
 from bs4 import BeautifulSoup
+from efoli import EdifactFormatVersion
 from freezegun import freeze_time
-from maus.edifact import EdifactFormatVersion
 
 from edi_energy_scraper import (
     EdiEnergyScraper,
