@@ -39,7 +39,7 @@ pytz==2024.1
     # via
     #   edi_energy_scraper (pyproject.toml)
     #   efoli
-soupsieve==2.5
+soupsieve==2.6
     # via beautifulsoup4
 yarl==1.9.4
     # via aiohttp
