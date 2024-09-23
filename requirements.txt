@@ -4,7 +4,7 @@
 #
 #    pip-compile pyproject.toml
 #
-aiohttp[speedups]==3.9.5
+aiohttp[speedups]==3.10.4
     # via
     #   aiohttp-requests
     #   edi_energy_scraper (pyproject.toml)
