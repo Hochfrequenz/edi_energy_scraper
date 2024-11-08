@@ -208,7 +208,7 @@ class EdiEnergyScraper:
     @staticmethod
     def remove_comments(soup):
         """
-        Removes thes HTML comments from the given soup.
+        Removes these HTML comments from the given soup.
         """
         for html_comment in soup.findAll(string=lambda text: isinstance(text, Comment)):
             html_comment.extract()
@@ -269,7 +269,7 @@ class EdiEnergyScraper:
                 continue
             # The first cell in a row contains a lot of whitespaces and somewhere in between a name.
             # e.g. "   INVOIC / REMADV AHB 2.4 Konsolidierte Lesefassung mit Fehlerkorrekturen Stand: 01.07.2020    "
-            # To normalize it, we remove all adjacent occurences of more than 1 whitespaces and replace characters that
+            # To normalize it, we remove all adjacent occurrences of more than 1 whitespaces and replace characters that
             # might cause problems in filenames (e.g. slash)
             # Looking back, this might not be the most readable format to store the files but by keeping it, it's way
             # easier to keep track of a file based history in our git archive.
