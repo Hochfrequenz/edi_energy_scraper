@@ -13,7 +13,7 @@ build-backend = "hatchling.build"
 name = "edi_energy_scraper"
 description = "a scraper to mirror edi-energy.de"
 license = { text = "MIT" }
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 authors = [
     { name = "Hochfrequenz Unternehmensberatung GmbH", email = "info+github@hochfrequenz.de" },
 ]
