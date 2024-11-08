@@ -58,12 +58,12 @@ test_packaging = [
     "twine==5.1.1"
 ]
 tests = [
+    "aioresponses==0.7.6",
+    "freezegun==1.5.1",
     "pytest==8.3.3",
-    "pytest-datafiles",
-    "pytest-mock",
     "pytest-asyncio==0.24.0",
-    "aioresponses",
-    "freezegun"
+    "pytest-datafiles==3.0.0",
+    "pytest-mock==3.14.0"
 ]
 type_check = [
     "mypy==1.11.2",
