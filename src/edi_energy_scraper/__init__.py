@@ -285,8 +285,8 @@ class EdiEnergyScraper:
                 # there's a special case: "Offen" means the document is valid until further notice.
                 if table_cells[2].text.strip() == "Offen":
                     valid_to_date = datetime.datetime(9999, 12, 31)
-                    if epoch == Epoch.PAST:
-                        # document has been replaced before it became valid
+                    document_has_been_replaced_before_it_became_valid = epoch == Epoch.PAST;
+                    if document_has_been_replaced_before_it_became_valid:
                         valid_to_date = publication_date
                 else:
                     raise value_error
