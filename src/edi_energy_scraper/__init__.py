@@ -252,7 +252,7 @@ class EdiEnergyScraper:
         return result
 
     @staticmethod
-    def get_epoch_file_map(epoch_soup: BeautifulSoup) -> Dict[str, str]:
+    def get_epoch_file_map(epoch_soup: BeautifulSoup, epoch: Epoch) -> Dict[str, str]:
         """
         Extracts a dictionary from the epoch soup (e.g. soup of "future.html") that maps file basenames as keys
         (e.g. "APERAKCONTRLAHB2.3h_99993112_20210104") to URLs of the documents as value.
@@ -285,6 +285,9 @@ class EdiEnergyScraper:
                 # there's a special case: "Offen" means the document is valid until further notice.
                 if table_cells[2].text.strip() == "Offen":
                     valid_to_date = datetime.datetime(9999, 12, 31)
+                    document_has_been_replaced_before_it_became_valid = epoch == Epoch.PAST
+                    if document_has_been_replaced_before_it_became_valid:
+                        valid_to_date = publication_date
                 else:
                     raise value_error
             # the 4th column contains a download link for the PDF.
@@ -351,7 +354,7 @@ class EdiEnergyScraper:
             epoch_path: Path = Path(self._root_dir, f"{_epoch}.html")  # e.g. "future.html"
             with open(epoch_path, "w+", encoding="utf8") as outfile:
                 outfile.write(epoch_soup.prettify())
-            file_map = EdiEnergyScraper.get_epoch_file_map(epoch_soup)
+            file_map = EdiEnergyScraper.get_epoch_file_map(epoch_soup, _epoch)
             download_tasks: List[Awaitable[Optional[List[Path]]]] = []
             file_counter = itertools.count()
             for file_basename, link in file_map.items():
