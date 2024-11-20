@@ -123,7 +123,7 @@ class TestEdiEnergyScraper:
         with open(datafiles / "future_20210210.html", "r", encoding="utf8") as infile:
             response_body = infile.read()
         soup = BeautifulSoup(response_body, "html.parser")
-        actual = EdiEnergyScraper.get_epoch_file_map(soup)
+        actual = EdiEnergyScraper.get_epoch_file_map(soup, Epoch.FUTURE)
         assert len(actual.keys()) == 76
         for file_basename in actual.keys():
             # all the future names should contain 99991231 as "valid to" date
@@ -140,7 +140,7 @@ class TestEdiEnergyScraper:
         with open(datafiles / "current_20210210.html", "r", encoding="utf8") as infile:
             response_body = infile.read()
         soup = BeautifulSoup(response_body, "html.parser")
-        actual = EdiEnergyScraper.get_epoch_file_map(soup)
+        actual = EdiEnergyScraper.get_epoch_file_map(soup, Epoch.CURRENT)
         assert len(actual.keys()) == 81
         for file_basename in actual.keys():
             # all the current documents are either "open" or valid until April 2021
@@ -157,7 +157,7 @@ class TestEdiEnergyScraper:
         with open(datafiles / "past_20210210.html", "r", encoding="utf8") as infile:
             response_body = infile.read()
         soup = BeautifulSoup(response_body, "html.parser")
-        actual = EdiEnergyScraper.get_epoch_file_map(soup)
+        actual = EdiEnergyScraper.get_epoch_file_map(soup, Epoch.PAST)
         assert len(actual.keys()) == 705
 
     @pytest.mark.parametrize(
