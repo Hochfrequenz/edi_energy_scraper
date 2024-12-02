@@ -40,5 +40,5 @@ pytz==2024.1
     #   efoli
 soupsieve==2.6
     # via beautifulsoup4
-yarl==1.18.0
+yarl==1.18.3
     # via aiohttp
