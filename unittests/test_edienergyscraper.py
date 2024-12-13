@@ -536,7 +536,7 @@ class TestEdiEnergyScraper:
                 id="valid in future, starting in past",
             ),
             pytest.param(
-                "IFTSTAMIG2.0e_20280930_20250404.pdf",
+                "IFTSTAMIG2.0e_20280930_20250606.pdf",
                 [EdifactFormatVersion.FV2504],
                 id="starting in future",
             ),
