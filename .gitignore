@@ -161,3 +161,5 @@ Temporary Items
 
 # vscode settings
 .vscode/
+
+src/_edi_energy_scraper_version.py
