@@ -123,7 +123,7 @@ class TestEdiEnergyScraper:
         with open(datafiles / "future_20210210.html", "r", encoding="utf8") as infile:
             response_body = infile.read()
         soup = BeautifulSoup(response_body, "html.parser")
-        actual = EdiEnergyScraper.get_epoch_file_map(soup)
+        actual = EdiEnergyScraper.get_epoch_file_map(soup, Epoch.FUTURE)
         assert len(actual.keys()) == 76
         for file_basename in actual.keys():
             # all the future names should contain 99991231 as "valid to" date
@@ -140,7 +140,7 @@ class TestEdiEnergyScraper:
         with open(datafiles / "current_20210210.html", "r", encoding="utf8") as infile:
             response_body = infile.read()
         soup = BeautifulSoup(response_body, "html.parser")
-        actual = EdiEnergyScraper.get_epoch_file_map(soup)
+        actual = EdiEnergyScraper.get_epoch_file_map(soup, Epoch.CURRENT)
         assert len(actual.keys()) == 81
         for file_basename in actual.keys():
             # all the current documents are either "open" or valid until April 2021
@@ -157,7 +157,7 @@ class TestEdiEnergyScraper:
         with open(datafiles / "past_20210210.html", "r", encoding="utf8") as infile:
             response_body = infile.read()
         soup = BeautifulSoup(response_body, "html.parser")
-        actual = EdiEnergyScraper.get_epoch_file_map(soup)
+        actual = EdiEnergyScraper.get_epoch_file_map(soup, Epoch.PAST)
         assert len(actual.keys()) == 705
 
     @pytest.mark.parametrize(
@@ -474,7 +474,8 @@ class TestEdiEnergyScraper:
             pytest.param("KostenblattFB1.0b_99991231_20230401.pdf", EdifactFormatVersion.FV2304),
             pytest.param("PARTINMIG1.0c_20240331_20240403.pdf", EdifactFormatVersion.FV2404),
             pytest.param("PARTINMIG1.0c_20240331_20241001.pdf", EdifactFormatVersion.FV2410),
-            pytest.param("PARTINMIG1.0c_20240331_20250404.pdf", EdifactFormatVersion.FV2504),
+            pytest.param("PARTINMIG1.0c_20240331_20250404.pdf", EdifactFormatVersion.FV2410),
+            pytest.param("PARTINMIG1.0c_20240331_20250606.pdf", EdifactFormatVersion.FV2504),
             pytest.param("PARTINMIG1.0c_20240331_20251001.pdf", EdifactFormatVersion.FV2510),
             pytest.param("IFTSTAMIG2.0e_20240402_20210929.pdf", EdifactFormatVersion.FV2104),  # Before first threshold
             pytest.param(
@@ -535,7 +536,7 @@ class TestEdiEnergyScraper:
                 id="valid in future, starting in past",
             ),
             pytest.param(
-                "IFTSTAMIG2.0e_20280930_20250404.pdf",
+                "IFTSTAMIG2.0e_20280930_20250606.pdf",
                 [EdifactFormatVersion.FV2504],
                 id="starting in future",
             ),
