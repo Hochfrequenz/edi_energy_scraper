@@ -22,7 +22,7 @@ coworker==2.0.1
     # via aiohttp-requests
 efoli==1.4.0
     # via edi_energy_scraper (pyproject.toml)
-frozenlist==1.4.1
+frozenlist==1.5.0
     # via
     #   aiohttp
     #   aiosignal
