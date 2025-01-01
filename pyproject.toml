@@ -34,7 +34,6 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-    "beautifulsoup4>=4.11.1",
     "aiohttp>=3.8.4",
     "aiohttp-requests>=0.2.2",
     "pypdf>=3.4.1",
