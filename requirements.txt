@@ -34,7 +34,7 @@ multidict==6.1.0
     #   yarl
 pypdf==5.1.0
     # via edi_energy_scraper (pyproject.toml)
-pytz==2024.1
+pytz==2024.2
     # via
     #   edi_energy_scraper (pyproject.toml)
     #   efoli
