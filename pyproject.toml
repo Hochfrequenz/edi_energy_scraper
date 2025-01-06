@@ -6,7 +6,7 @@
 # Build system information and other project-specific configuration below.
 
 [build-system]
-requires = ["hatchling==1.26.3", "hatch-vcs", "hatch-fancy-pypi-readme"]
+requires = ["hatchling==1.27.0", "hatch-vcs", "hatch-fancy-pypi-readme"]
 # pinned hatchling version because https://github.com/astral-sh/rye/issues/1446
 build-backend = "hatchling.build"
 
