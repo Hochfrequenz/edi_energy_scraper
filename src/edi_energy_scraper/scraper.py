@@ -1,3 +1,5 @@
+"""contains the scraper class"""
+
 import asyncio
 import logging
 from pathlib import Path
@@ -48,6 +50,16 @@ class EdiEnergyScraper:
         response_model = ResponseModel.model_validate(response_body)
         return response_model.data
 
+    def _remove_old_files(self, documents: list[Document]) -> None:
+        """removes those files that are no longer available online"""
+        all_downloaded_files = self._root_dir.rglob("**/*")
+        all_recent_file_ids = {str(d.fileId) for d in documents}
+        for downloaded_file in all_downloaded_files:
+            file_id_of_downloaded_file = downloaded_file.stem.split("_")[-1]
+            if file_id_of_downloaded_file not in all_recent_file_ids:
+                _logger.debug("Removing %s", downloaded_file.absolute())
+                downloaded_file.unlink()
+
     async def download_document(self, document: Document) -> Path:
         """
         downloads the file related to the given document and returns its path
@@ -88,7 +100,8 @@ class EdiEnergyScraper:
             # we'll raise an error for the root dir, but create sub dirs on the fly
             raise ValueError(f"The path {self._root_dir} is either no directory or does not exist")
         download_tasks: list[Awaitable[Path]] = []
-        for document in await self.get_documents_overview():
+        all_metadata = await self.get_documents_overview()
+        for document in all_metadata:
             if not document.isFree:
                 _logger.debug("Skipping %s because it's not free", document.title)
                 continue
@@ -96,3 +109,5 @@ class EdiEnergyScraper:
         for download_chunk in chunked(download_tasks, 10):
             await asyncio.gather(*download_chunk)
         _logger.info("Downloaded %i files", len(download_tasks))
+        self._remove_old_files(all_metadata)
+        _logger.info("Finished mirroring")

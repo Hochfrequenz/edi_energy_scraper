@@ -62,3 +62,19 @@ async def test_download_file(tmp_path: Path) -> None:
             actual = await client.download_document(example_document)
     assert actual.is_file()
     assert actual.suffix == ".pdf"
+
+
+def test_cleanup(tmp_path: Path) -> None:
+    test_folder = tmp_path / "test"
+    test_folder.mkdir()
+    outdated_file_path = test_folder / "foo_123.pdf"
+    outdated_file_path.touch()
+    recent_file_path = test_folder / "foo_456.docx"
+    recent_file_path.touch()
+    recent_file_path2 = test_folder / "foo_bar_xyzadsiadakdslaskmd_1.4a_789.docx"
+    recent_file_path2.touch()
+    client = EdiEnergyScraper("https://bdew-mako.inv", test_folder)
+    client._remove_old_files([Document.model_construct(fileId=456), Document.model_construct(fileId=789)])
+    assert not outdated_file_path.exists()
+    assert recent_file_path.exists()
+    assert recent_file_path2.exists()
