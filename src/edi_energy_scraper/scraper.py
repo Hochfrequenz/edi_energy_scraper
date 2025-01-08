@@ -23,7 +23,7 @@ class EdiEnergyScraper:
     def __init__(
         self,
         root_url: str = "https://www.bdew-mako.de",
-        path_to_mirror_directory: Union[Path, str] = Path("edi_energy_de"),  # keep this path for legacy compatability
+        path_to_mirror_directory: Union[Path, str] = Path("edi_energy_de"),  # keep this path for legacy compatibility
         # HTML and PDF files will be stored relative to this
         connection_limit: int = 3,  # using trial and error this was found as a good value to not get blocked
     ):

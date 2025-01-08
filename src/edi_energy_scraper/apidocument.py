@@ -28,7 +28,7 @@ class Document(BaseModel):
     id: int
     fileId: int
     title: str
-    version: Optional[str]  # this is NOT '1.4a' or something like that (you have to read thoses from the title)
+    version: Optional[str]  # this is NOT '1.4a' or something like that (you have to read those from the title)
     topicId: int
     topicGroupId: int
     isFree: bool

@@ -8,11 +8,11 @@
 ![Black status badge](https://github.com/Hochfrequenz/edi_energy_scraper/workflows/Black/badge.svg)
 ![PyPi Status Badge](https://img.shields.io/pypi/v/edi_energy_scraper)
 
-The Python package `edi_energy_scraper` provides easy to use methods to mirror the website edi-energy.de.
+The Python package `edi_energy_scraper` provides easy to use methods to mirror the free documents on bdew-mako.de.
 
 ### Rationale / Why?
 
-If you'd like to be informed about new regulations or data formats being published on edi-energy.de you can either
+If you'd like to be informed about new regulations or data formats being published on bdew-mako.de you can either
 
 - visit the site every day and hope that you see the changes if this is your favourite hobby,
 - or automate the task.
