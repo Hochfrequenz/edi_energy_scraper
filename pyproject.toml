@@ -6,7 +6,7 @@
 # Build system information and other project-specific configuration below.
 
 [build-system]
-requires = ["hatchling==1.26.3", "hatch-vcs", "hatch-fancy-pypi-readme"]
+requires = ["hatchling==1.27.0", "hatch-vcs", "hatch-fancy-pypi-readme"]
 # pinned hatchling version because https://github.com/astral-sh/rye/issues/1446
 build-backend = "hatchling.build"
 
@@ -52,14 +52,14 @@ formatting = [
     "isort==5.13.2"
 ]
 linting = [
-    "pylint==3.2.7"
+    "pylint==3.3.3"
 ]
 spellcheck = [
     "codespell==2.3.0"
 ]
 test_packaging = [
     "build==1.2.2.post1",
-    "twine==5.1.1"
+    "twine==6.0.1"
 ]
 tests = [
     "aioresponses==0.7.7",
@@ -70,7 +70,7 @@ tests = [
     "syrupy==4.8.0"
 ]
 type_check = [
-    "mypy==1.11.2",
+    "mypy==1.14.1",
     "types-pytz==2024.1.0.20240417"
 ]
 
