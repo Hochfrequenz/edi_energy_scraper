@@ -5,9 +5,11 @@ from typing import Union
 import aiohttp
 from efoli import get_edifact_format_version
 
-from edi_energy_scraper import Document, ResponseModel
+from edi_energy_scraper.apidocument import Document, ResponseModel
 
 _logger = logging.getLogger(__name__)
+
+
 class EdiEnergyScraper:
     """
     A class that uses beautiful soup to extract and download data from bdew-mako.de API.
@@ -34,29 +36,25 @@ class EdiEnergyScraper:
         self.tcp_connector = aiohttp.TCPConnector(limit_per_host=connection_limit)
         self._session = aiohttp.ClientSession(connector=self.tcp_connector)
 
-    def __del__(self):
-        self._session.close()
-
     async def get_documents_overview(self) -> list[Document]:
         """
         download meta information about all available documents
         """
         documents_response = await self._session.get(f"{self._root_url}/api/documents", timeout=5)
-        response_model = ResponseModel.model_validate(documents_response.json())
+        response_model = ResponseModel.model_validate(await documents_response.json())
         return response_model.data
 
-    async def _download_document(self, document:Document)->Path:
+    async def download_document(self, document: Document) -> Path:
         """
         downloads the file related to the given document and returns its path
         """
         format_version = get_edifact_format_version(document.validFrom)
         target_file_name = document.get_meaningful_file_name()
-        file_path = Path(format_version)/Path(target_file_name)
+        file_path = Path(format_version) / Path(target_file_name)
         response = await self._session.get(f"{self._root_url}/api/downloadFile/{document.fileId}")
         return file_path
 
-
-    async def mirror(self)->None:
+    async def mirror(self) -> None:
         """
         Main method of the scraper.
         Downloads all the files and pages and stores them in the filesystem.
@@ -69,4 +67,4 @@ class EdiEnergyScraper:
                 _logger.debug("Skipping %s because it's not free", document.title)
                 continue
 
-            download_task = self.requests.get("")
+            raise NotImplementedError("todo")

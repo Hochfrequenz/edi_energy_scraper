@@ -3,7 +3,8 @@ from pathlib import Path
 
 from aioresponses import aioresponses
 
-from edi_energy_scraper import Document, EdiEnergyScraper
+from edi_energy_scraper.apidocument import Document
+from edi_energy_scraper.scraper import EdiEnergyScraper
 
 
 async def test_download_overview() -> None:
