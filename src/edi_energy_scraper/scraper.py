@@ -1,11 +1,14 @@
+import asyncio
 import logging
 from pathlib import Path
-from typing import Union
+from typing import Awaitable, Union
 
 import aiohttp
 from efoli import get_edifact_format_version
+from more_itertools import chunked
 
 from edi_energy_scraper.apidocument import Document, ResponseModel
+from edi_energy_scraper.utilities import _have_different_metadata
 
 _logger = logging.getLogger(__name__)
 
@@ -41,7 +44,8 @@ class EdiEnergyScraper:
         download meta information about all available documents
         """
         documents_response = await self._session.get(f"{self._root_url}/api/documents", timeout=5)
-        response_model = ResponseModel.model_validate(await documents_response.json())
+        response_body = await documents_response.json()
+        response_model = ResponseModel.model_validate(response_body)
         return response_model.data
 
     async def download_document(self, document: Document) -> Path:
@@ -49,9 +53,30 @@ class EdiEnergyScraper:
         downloads the file related to the given document and returns its path
         """
         format_version = get_edifact_format_version(document.validFrom)
+        fv_path = self._root_dir / Path(format_version)
+        if not fv_path.exists():
+            _logger.debug("Creating directory %s", fv_path.absolute())
+            fv_path.mkdir(exist_ok=True, parents=True)
         target_file_name = document.get_meaningful_file_name()
-        file_path = Path(format_version) / Path(target_file_name)
+        tmp_target_file_name = document.get_meaningful_file_name() + ".tmp"
+        file_path = fv_path / Path(target_file_name)
+        tmp_file_path = fv_path / Path(tmp_target_file_name)
         response = await self._session.get(f"{self._root_url}/api/downloadFile/{document.fileId}")
+        with open(tmp_file_path, "wb+") as downloaded_file:
+            while chunk := await response.content.read(1024):
+                downloaded_file.write(chunk)
+        if file_path.exists() and file_path.suffix == ".pdf":
+            _logger.debug("PDF file %s already exists. Checking metadata")
+            if _have_different_metadata(file_path, tmp_file_path):
+                _logger.debug("Metadata for %s differ. Overwriting...", file_path.absolute())
+                file_path.unlink()
+                tmp_file_path.replace(file_path)
+            else:
+                _logger.debug("Metadata for %s are the same. Nothing to do.", file_path.absolute())
+                tmp_file_path.unlink()
+        else:
+            tmp_file_path.replace(file_path)
+        _logger.debug("Successfully downloaded File with ID %i to %s", document.fileId, file_path.absolute())
         return file_path
 
     async def mirror(self) -> None:
@@ -62,9 +87,12 @@ class EdiEnergyScraper:
         if not self._root_dir.exists() or not self._root_dir.is_dir():
             # we'll raise an error for the root dir, but create sub dirs on the fly
             raise ValueError(f"The path {self._root_dir} is either no directory or does not exist")
+        download_tasks: list[Awaitable[Path]] = []
         for document in await self.get_documents_overview():
             if not document.isFree:
                 _logger.debug("Skipping %s because it's not free", document.title)
                 continue
-
-            raise NotImplementedError("todo")
+            download_tasks.append(self.download_document(document))
+        for download_chunk in chunked(download_tasks, 10):
+            await asyncio.gather(*download_chunk)
+        _logger.info("Downloaded %i files", len(download_tasks))

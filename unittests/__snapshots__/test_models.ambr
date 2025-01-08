@@ -1283,8 +1283,8 @@
     'regelungenzumverzeichnisdienst_1.0v_99991231_20250403_20250403_10803.pdf',
     'AHB_UTILTS_1.0_20241211_20250403_20250403_10813.docx',
     'AHB_UTILTS_1.0_20241211_20250403_20250403_10814.pdf',
-    'entscheidungsbaumdiagrammeundcodelisteninformatorischelesefassung_3.5_20250604_20241106_20241106_10819.docx',
-    'entscheidungsbaumdiagrammeundcodelisten_3.5_20250605_20241106_20241106_10822.pdf',
+    'entscheidungsbaumdiagrammeundcodelisteninformatorischelesefassung_3.5_20250106_20241106_20241106_10819.docx',
+    'entscheidungsbaumdiagrammeundcodelisten_3.5_20250106_20241106_20241106_10822.pdf',
     'apiguideline_1.0a_99991231_20250605_20250605_10823.pdf',
     'apiguidelineinformatorischelesefassung_1.0a_99991231_20250605_20250605_10824.docx',
     'MIG_COMDIS_1.0d_20250605_20240402_20240402_10953.xml',
@@ -1423,5 +1423,7 @@
     'AHB_APERAK_2.4a_99991231_20250605_20250605_11174.xml',
     'AHB_CONTRL_2.4a_99991231_20250605_20250605_11175.xml',
     'codelistederlokationsbndelstrukturen_1.0_99991231_20241212_20241212_11418.pdf',
+    'entscheidungsbaumdiagrammeundcodelisten_3.5_20250604_20250107_20250107_11419.pdf',
+    'entscheidungsbaumdiagrammeundcodelisten_3.5_20250604_20250107_20250107_11420.docx',
   ])
 # ---

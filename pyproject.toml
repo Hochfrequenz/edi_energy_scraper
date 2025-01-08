@@ -39,7 +39,8 @@ dependencies = [
     "efoli>=1.4.0",
     "pytz>=2022.7.1",
     "pydantic>=2",
-    "pytz>=2024.2"
+    "pytz>=2024.2",
+    "more_itertools"
 ]
 dynamic = ["readme", "version"]
 

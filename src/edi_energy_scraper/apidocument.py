@@ -44,8 +44,8 @@ class Document(BaseModel):
     topicGroupSortNr: int
     topicSortNr: int
 
-    @classmethod
     @field_validator("publicationDate", "validFrom", "validTo", "correctionDate", mode="before")
+    @classmethod
     def _parse_datetime(cls, value: str | datetime) -> date:
         """
         Some datetimes from the API are returned as '2024-10-23T00:00:00' so they are obviously meant as UTC,
