@@ -44,7 +44,8 @@ Then import it and start the download:
 
 ```python
 import asyncio
-from edi_energy_scraper import EdiEnergyScraper
+from edi_energy_scraper.scraper import EdiEnergyScraper
+
 
 # add the following lines to enable debug logging to stdout (CLI)
 # import logging

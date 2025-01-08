@@ -4,7 +4,7 @@ A minimal working example on how to use this package
 
 import asyncio
 
-from edi_energy_scraper import EdiEnergyScraper
+from edi_energy_scraper.scraper import EdiEnergyScraper
 
 
 async def mirror():

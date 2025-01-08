@@ -1,33 +1,13 @@
-"""
-A module to scrape data from edi-energy.de.
-"""
-
-import asyncio
-import datetime
-import io
-import itertools
 import logging
-import os
-import re
-from email.message import Message
 from pathlib import Path
-from random import randint
-from typing import Awaitable, Dict, List, Optional, Set, Union
+from typing import Union
 
 import aiohttp
-import pytz
-from aiohttp import ServerDisconnectedError
-from aiohttp_requests import Requests  # type:ignore[import]
-from efoli import EdifactFormatVersion, get_edifact_format_version
-from pypdf import PdfReader
+from efoli import get_edifact_format_version
 
-from edi_energy_scraper.apidocument import Document, ResponseModel
-from edi_energy_scraper.epoch import Epoch
+from edi_energy_scraper import Document, ResponseModel
 
-_logger = logging.getLogger("edi_energy_scraper")
-_logger.setLevel(logging.DEBUG)
-
-
+_logger = logging.getLogger(__name__)
 class EdiEnergyScraper:
     """
     A class that uses beautiful soup to extract and download data from bdew-mako.de API.
@@ -62,29 +42,31 @@ class EdiEnergyScraper:
         download meta information about all available documents
         """
         documents_response = await self._session.get(f"{self._root_url}/api/documents", timeout=5)
-        response_model = ResponseModel.model_validate(await documents_response.json())
+        response_model = ResponseModel.model_validate(documents_response.json())
         return response_model.data
 
-    async def _download_document_file(self, document: Document, file_path: Path) -> None:
+    async def _download_document(self, document:Document)->Path:
         """
-        downloads the file related to the given document to the specified path
+        downloads the file related to the given document and returns its path
         """
-        response = await self.requests.get(f"{self._root_url}/api/downloadFile/{document.fileId}")
+        format_version = get_edifact_format_version(document.validFrom)
+        target_file_name = document.get_meaningful_file_name()
+        file_path = Path(format_version)/Path(target_file_name)
+        response = await self._session.get(f"{self._root_url}/api/downloadFile/{document.fileId}")
+        return file_path
 
-    async def mirror(self):
+
+    async def mirror(self)->None:
         """
-        Main method of the scraper. Downloads all the files and pages and stores them in the filesystem
+        Main method of the scraper.
+        Downloads all the files and pages and stores them in the filesystem.
         """
         if not self._root_dir.exists() or not self._root_dir.is_dir():
             # we'll raise an error for the root dir, but create sub dirs on the fly
             raise ValueError(f"The path {self._root_dir} is either no directory or does not exist")
-        documents_response = await self.requests.get(f"{self._root_url}/api" / "documents", timeout=5)
-        response_model = ResponseModel.model_validate(documents_response.json())
-        download_tasks: List[Awaitable] = []
-        for document in response_model.data:
+        for document in await self.get_documents_overview():
             if not document.isFree:
                 _logger.debug("Skipping %s because it's not free", document.title)
                 continue
-            format_version = get_edifact_format_version(document.validFrom)
-            target_file_name = document.get_meaningful_file_name()
+
             download_task = self.requests.get("")
