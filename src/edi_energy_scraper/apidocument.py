@@ -19,6 +19,7 @@ _AhbPattern = re.compile(r".*\bAHB\b.*")
 _FormatPattern = re.compile(r".*\b(?P<format>[A-Z]{6})\b.*")
 _VersionPattern = re.compile(r"^.*?\b(?P<version>\d+\.\d+[a-z]?)\b.*$")  # assumption: version is always before datum
 _AlternativeKindPattern = re.compile(r"^(?P<name>\D+).*$")
+_StandPattern = re.compile(".*Stand:\s*(?P<day>\d{1,2})\.(?P<month>\d{1,2})\.(?P<year>\d{4}).*")
 
 
 class Document(BaseModel):
@@ -34,7 +35,7 @@ class Document(BaseModel):
     topicId: int
     topicGroupId: int
     isFree: bool
-    publicationDate: Optional[date]  # informatorische lesefassungen don't have a publication date yet
+    publicationDate: Optional[date]  # informatorische lesefassungen don't have a publ date set; you can't rely on that
     validFrom: date
     validTo: Optional[date]
     isConsolidatedReadingVersion: bool  # you cannot rely on this flag to be set
@@ -182,6 +183,15 @@ class Document(BaseModel):
             return True
         return "informatorische" in self.title.lower()
 
+    @property
+    def publication_date(self) -> date | None:
+        if self.publicationDate:
+            return self.publicationDate
+        match = _StandPattern.match(self.title)
+        if match:
+            return date(int(match.group("year")), int(match.group("month")), int(match.group("day")))
+        return None
+
     def get_meaningful_file_name(self) -> str:
         """
         Generates a meaningful file name from the metadata (the attributes of this document instance).
@@ -195,7 +205,7 @@ class Document(BaseModel):
         """
 
         placeholder_values = {
-            "publication_date": (self.publicationDate or self.gueltig_ab).strftime("%Y%m%d"),
+            "publication_date": (self.publication_date or self.gueltig_ab).strftime("%Y%m%d"),
             "from_date": self.gueltig_ab.strftime("%Y%m%d"),
             "to_date": self.gueltig_bis.strftime("%Y%m%d"),
             "extension": self.file_extension,
