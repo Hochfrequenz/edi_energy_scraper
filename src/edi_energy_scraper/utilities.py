@@ -26,3 +26,6 @@ def _have_different_metadata(path_new_file: Path, path_to_old_file: Path) -> boo
     metadata_has_changed: bool = pdf_new_metadata != pdf_old_metadata
 
     return metadata_has_changed
+
+
+__all__ = ["_have_different_metadata"]

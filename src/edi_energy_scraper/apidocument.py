@@ -22,7 +22,9 @@ _AlternativeKindPattern = re.compile(r"^(?P<name>\D+).*$")
 
 
 class Document(BaseModel):
-    """single document from the API"""
+    """
+    single document metadata, directly from the API
+    """
 
     userId: int
     id: int
@@ -35,11 +37,11 @@ class Document(BaseModel):
     publicationDate: Optional[date]  # informatorische lesefassungen don't have a publication date yet
     validFrom: date
     validTo: Optional[date]
-    isConsolidatedReadingVersion: bool
-    isExtraordinaryPublication: bool
-    isErrorCorrection: bool
+    isConsolidatedReadingVersion: bool  # you cannot rely on this flag to be set
+    isExtraordinaryPublication: bool  # you cannot rely on this flag to be set
+    isErrorCorrection: bool  # you cannot rely on this flag to be set
     correctionDate: Optional[date]
-    isInformationalReadingVersion: bool
+    isInformationalReadingVersion: bool  # you cannot rely on this flag to be set
     fileType: str
     topicGroupSortNr: int
     topicSortNr: int
@@ -109,6 +111,12 @@ class Document(BaseModel):
             return "MIG"
         if _AhbPattern.match(self.title):
             return "AHB"
+        if "entscheidungsbaum" in self.title.lower():
+            return "EBD"
+        if self.file_extension == "xsd":
+            return "XSD"
+        if self.file_extension == "xlsx":
+            return "EXCEL"
         return None
 
     @property
@@ -146,6 +154,34 @@ class Document(BaseModel):
             return None
         return match.group("version")
 
+    @property
+    def is_consolidated_reading_version(self) -> bool:
+        """true if this is a konsolidierte Lesefassung"""
+        if self.isConsolidatedReadingVersion:
+            return True
+        return "konsolidierte" in self.title.lower()
+
+    @property
+    def is_error_correction(self) -> bool:
+        """true if this is a Fehlerkorrektur"""
+        if self.isErrorCorrection:
+            return True
+        return "fehler" in self.title.lower()
+
+    @property
+    def is_extraordinary_publication(self) -> bool:
+        """true if this is a außerordentliche Veröffentlichung"""
+        if self.isExtraordinaryPublication:
+            return True
+        return "ausserordenlich" in self.title.lower() or "außerordentlich" in self.title.lower()
+
+    @property
+    def is_informational_reading_version(self) -> bool:
+        """true if this is a informatorische Lesefassung"""
+        if self.isInformationalReadingVersion:
+            return True
+        return "informatorische" in self.title.lower()
+
     def get_meaningful_file_name(self) -> str:
         """
         Generates a meaningful file name from the metadata (the attributes of this document instance).
@@ -155,6 +191,7 @@ class Document(BaseModel):
         The file name returned does _not_ include any directory or such.
         The file name returned does have an extension, e.g. it ends with ".pdf".
         The file name returned is unique (as long as the file id is unique).
+        This function can be 'reversed' using DocumentMetadata.from_filename(...).
         """
 
         placeholder_values = {
@@ -166,9 +203,23 @@ class Document(BaseModel):
             "kind": self.file_kind or self.alternative_file_kind,
             "edifact_format": (self.edifact_format + "_" if self.edifact_format else ""),
             "version": self.document_version or "NV",
+            # ok, this is "wild": we encode boolean information as 'x'=true and 'o'=false into the filename 😵‍💫
+            "flags": "".join(
+                [
+                    ("x" if f is True else "o")
+                    for f in [
+                        self.is_error_correction,
+                        self.is_extraordinary_publication,
+                        self.is_consolidated_reading_version,
+                        self.is_informational_reading_version,
+                    ]
+                ]
+            ),
         }
-        return "{kind}_{edifact_format}{version}_{to_date}_{from_date}_{publication_date}_{id}.{extension}".format(
-            **placeholder_values
+        return (
+            "{kind}_{edifact_format}{version}_{to_date}_{from_date}_{publication_date}_{flags}_{id}.{extension}".format(
+                **placeholder_values
+            )
         )
 
 

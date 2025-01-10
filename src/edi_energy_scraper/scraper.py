@@ -111,3 +111,6 @@ class EdiEnergyScraper:
         _logger.info("Downloaded %i files", len(download_tasks))
         self._remove_old_files(all_metadata)
         _logger.info("Finished mirroring")
+
+
+__all__ = ["EdiEnergyScraper"]

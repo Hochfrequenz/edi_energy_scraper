@@ -117,7 +117,7 @@ max-line-length = 120
 asyncio_mode = "auto"
 
 markers = ["snapshot: mark a test as a snapshot test"]
-# the following lines are needed if you would like to build a python package
+# the following lines are needed if you would like to build a python package,
 # and you want to use semantic versioning
 # [build-system]
 # requires = ["setuptools>=41.0", "wheel", "setuptools_scm[toml]>=3.4"]
