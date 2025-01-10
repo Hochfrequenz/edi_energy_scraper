@@ -1,12 +1,12 @@
 # edi-energy.de scraper
 
-<!--- you need to replace the `organization/repo_name` in the status badge URLs --->
-
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Unittests status badge](https://github.com/Hochfrequenz/edi_energy_scraper/workflows/Unittests/badge.svg)
 ![Coverage status badge](https://github.com/Hochfrequenz/edi_energy_scraper/workflows/Coverage/badge.svg)
 ![Linting status badge](https://github.com/Hochfrequenz/edi_energy_scraper/workflows/Linting/badge.svg)
 ![Black status badge](https://github.com/Hochfrequenz/edi_energy_scraper/workflows/Black/badge.svg)
 ![PyPi Status Badge](https://img.shields.io/pypi/v/edi_energy_scraper)
+![Python Versions (officially) supported](https://img.shields.io/pypi/pyversions/edi_energy_scraper.svg)
 
 The Python package `edi_energy_scraper` provides easy to use methods to mirror the free documents on bdew-mako.de.
 
@@ -20,7 +20,6 @@ If you'd like to be informed about new regulations or data formats being publish
 This repository helps you with the latter. It allows you to create an up-to-date copy of edi-energy.de on your local
 computer. Other than if you mirrored the files using `wget` or `curl`, you'll get a clean and intuitive directory
 structure.
-
 
 From there you can e.g. commit the files into a VCS (like e.g. our [edi_energy_mirror](https://github.com/Hochfrequenz/edi_energy_mirror)), scrape the PDF/Word files for later use...
 
@@ -44,7 +43,7 @@ Then import it and start the download:
 
 ```python
 import asyncio
-from edi_energy_scraper.scraper import EdiEnergyScraper
+from edi_energy_scraper import EdiEnergyScraper
 
 
 # add the following lines to enable debug logging to stdout (CLI)
@@ -69,18 +68,26 @@ This creates a directory structure:
 ```
 -|-your_script_cwd.py
  |-edi_energy_de
-    |- past (contains archived files)
+    |- FV2310 (contains files valid since 2023-10-01)
         |- ahb.pdf
         |- ahb.docx
         |- ...
-    |- current (contains files valid as of today)
+    |- FV2404 (contains files valid since 2024-04-03)
         |- mig.pdf
         |- mig.docx
         |- ...
-    |- future (contains files valid in the future)
+    |- FV2504 (contains files valid since 2025-06-06)
         |- allgemeine_festlegungen.pdf
         |- schema.xsd
         |- ...
+```
+
+> [!TIP]
+> You can extract the information encoded into the filenames:
+> ```python
+> from edi_energy_scraper import DocumentMetadata
+> structured_information = DocumentMetadata.from_filename("AHB_COMDIS_1.0f_99991231_20250605_20250605_8872.pdf")
+> # DocumentMetadata(kind='MIG', edifact_format=<EdifactFormat.REQOTE: 'REQOTE'>, valid_from=datetime.date(2023, 9, 30), valid_unt...traordinary_publication=True, is_error_correction=False, is_informational_reading_version=True, additional_text=None, id=10071)
 ```
 
 ## How to use this Repository on Your Machine (for development)
