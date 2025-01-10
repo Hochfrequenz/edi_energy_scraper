@@ -19,7 +19,7 @@ _AhbPattern = re.compile(r".*\bAHB\b.*")
 _FormatPattern = re.compile(r".*\b(?P<format>[A-Z]{6})\b.*")
 _VersionPattern = re.compile(r"^.*?\b(?P<version>\d+\.\d+[a-z]?)\b.*$")  # assumption: version is always before datum
 _AlternativeKindPattern = re.compile(r"^(?P<name>\D+).*$")
-_StandPattern = re.compile(".*Stand:\s*(?P<day>\d{1,2})\.(?P<month>\d{1,2})\.(?P<year>\d{4}).*")
+_StandPattern = re.compile(r".*Stand:\s*(?P<day>\d{1,2})\.(?P<month>\d{1,2})\.(?P<year>\d{4}).*")
 
 
 class Document(BaseModel):
@@ -185,6 +185,7 @@ class Document(BaseModel):
 
     @property
     def publication_date(self) -> date | None:
+        """use the publication date from the API (if present - hint: it never is) or try scraping it from the title"""
         if self.publicationDate:
             return self.publicationDate
         match = _StandPattern.match(self.title)
