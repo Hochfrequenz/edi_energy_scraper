@@ -52,7 +52,7 @@ class EdiEnergyScraper:
 
     def _remove_old_files(self, documents: list[Document]) -> None:
         """removes those files that are no longer available online"""
-        all_downloaded_files = self._root_dir.rglob("**/*")
+        all_downloaded_files = (f for f in self._root_dir.rglob("**/*") if f.is_file())
         all_recent_file_ids = {str(d.fileId) for d in documents}
         for downloaded_file in all_downloaded_files:
             file_id_of_downloaded_file = downloaded_file.stem.split("_")[-1]
