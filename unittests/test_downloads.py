@@ -67,6 +67,8 @@ async def test_download_file(tmp_path: Path) -> None:
 def test_cleanup(tmp_path: Path) -> None:
     test_folder = tmp_path / "test"
     test_folder.mkdir()
+    a_directory = test_folder / "adir"
+    a_directory.mkdir()
     outdated_file_path = test_folder / "foo_123.pdf"
     outdated_file_path.touch()
     recent_file_path = test_folder / "foo_456.docx"
