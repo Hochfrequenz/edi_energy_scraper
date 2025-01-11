@@ -4,22 +4,14 @@
 #
 #    pip-compile pyproject.toml
 #
-aiohttp[speedups]==3.9.5
-    # via
-    #   aiohttp-requests
-    #   edi_energy_scraper (pyproject.toml)
-aiohttp-requests==0.2.4
+aiohttp==3.9.5
     # via edi_energy_scraper (pyproject.toml)
 aiosignal==1.3.1
     # via aiohttp
+annotated-types==0.7.0
+    # via pydantic
 attrs==24.2.0
     # via aiohttp
-beautifulsoup4==4.12.3
-    # via edi_energy_scraper (pyproject.toml)
-brotli==1.1.0
-    # via aiohttp
-coworker==2.0.1
-    # via aiohttp-requests
 efoli==1.4.0
     # via edi_energy_scraper (pyproject.toml)
 frozenlist==1.5.0
@@ -28,17 +20,27 @@ frozenlist==1.5.0
     #   aiosignal
 idna==3.10
     # via yarl
+more-itertools==10.5.0
+    # via edi_energy_scraper (pyproject.toml)
 multidict==6.1.0
     # via
     #   aiohttp
     #   yarl
+propcache==0.2.1
+    # via yarl
+pydantic==2.10.4
+    # via edi_energy_scraper (pyproject.toml)
+pydantic-core==2.27.2
+    # via pydantic
 pypdf==5.1.0
     # via edi_energy_scraper (pyproject.toml)
 pytz==2024.2
     # via
     #   edi_energy_scraper (pyproject.toml)
     #   efoli
-soupsieve==2.6
-    # via beautifulsoup4
+typing-extensions==4.12.2
+    # via
+    #   pydantic
+    #   pydantic-core
 yarl==1.18.3
     # via aiohttp

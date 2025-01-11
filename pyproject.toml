@@ -14,7 +14,7 @@ build-backend = "hatchling.build"
 name = "edi_energy_scraper"
 description = "a scraper to mirror edi-energy.de"
 license = { text = "MIT" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     { name = "Hochfrequenz Unternehmensberatung GmbH", email = "info+github@hochfrequenz.de" },
 ]
@@ -27,19 +27,19 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-    "beautifulsoup4>=4.11.1",
     "aiohttp>=3.8.4",
-    "aiohttp-requests>=0.2.2",
     "pypdf>=3.4.1",
     "efoli>=1.4.0",
     "pytz>=2022.7.1",
+    "pydantic>=2",
+    "pytz>=2024.2",
+    "more_itertools"
 ]
 dynamic = ["readme", "version"]
 
@@ -66,8 +66,8 @@ tests = [
     "freezegun==1.5.1",
     "pytest==8.3.4",
     "pytest-asyncio==0.25.0",
-    "pytest-datafiles==3.0.0",
-    "pytest-mock==3.14.0"
+    "pytest-mock==3.14.0",
+    "syrupy==4.8.0"
 ]
 type_check = [
     "mypy==1.14.1",
@@ -115,9 +115,9 @@ max-line-length = 120
 # even if they have no @pytest.mark.asyncio marker.
 # https://github.com/pytest-dev/pytest-asyncio#auto-mode
 asyncio_mode = "auto"
-markers = ["datafiles"]
 
-# the following lines are needed if you would like to build a python package
+markers = ["snapshot: mark a test as a snapshot test"]
+# the following lines are needed if you would like to build a python package,
 # and you want to use semantic versioning
 # [build-system]
 # requires = ["setuptools>=41.0", "wheel", "setuptools_scm[toml]>=3.4"]
