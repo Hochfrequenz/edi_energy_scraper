@@ -62,10 +62,10 @@ class Document(BaseModel):
             is_probably_utc = naive_datetime.hour in {22, 23}
             if is_probably_utc:
                 utc_datetime = datetime.fromisoformat(value).replace(tzinfo=timezone.utc)
+                berlin_datetime = utc_datetime.astimezone(_berlin_time)
             else:
                 berlin_datetime = datetime.fromisoformat(value).replace(tzinfo=_berlin_time)
-                utc_datetime = berlin_datetime.astimezone(timezone.utc)
-            return utc_datetime.date()
+            return berlin_datetime.date()
         if isinstance(value, datetime):
             return value.date()
         if isinstance(value, date):
