@@ -1,9 +1,12 @@
+from datetime import date
 from pathlib import Path
+from typing import Callable
 
 import pytest
+from efoli import EdifactFormat
 from syrupy.assertion import SnapshotAssertion
 
-from edi_energy_scraper.apidocument import ResponseModel
+from edi_energy_scraper.apidocument import Document, ResponseModel
 from edi_energy_scraper.documentmetadata import DocumentMetadata
 
 
@@ -11,6 +14,30 @@ def test_api_models() -> None:
     with open(Path(__file__).parent / "get_documents_response_body.json", "r", encoding="utf-8") as f:
         actual = ResponseModel.model_validate_json(f.read())
     assert any(actual)
+
+
+example_response = Path(__file__).parent / "get_documents_response_body.json"
+
+
+@pytest.mark.parametrize(
+    "json_file, expected_document_predicate",
+    [
+        pytest.param(example_response, lambda d: d.edifact_format == EdifactFormat.IFTSTA),
+        pytest.param(
+            example_response,
+            lambda d: d.edifact_format == EdifactFormat.IFTSTA
+            and d.id == 7316
+            and d.file_kind == "MIG"
+            and d.document_version == "2.0f"
+            and d.gueltig_ab == date(2025, 6, 6),
+            id="IFTSTA MIG - informatorische Lesefassung 2.0f",
+        ),
+    ],
+)
+def test_single_documents(json_file: Path, expected_document_predicate: Callable[[Document], bool]) -> None:
+    with open(example_response, "r", encoding="utf-8") as f:
+        documents = ResponseModel.model_validate_json(f.read()).data
+    assert any(d for d in documents if expected_document_predicate(d))
 
 
 @pytest.mark.snapshot
