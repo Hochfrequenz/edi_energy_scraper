@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from pathlib import Path
-from typing import Awaitable, Union
+from typing import Awaitable, Callable, Union, overload
 
 import aiohttp
 from aiohttp import ClientTimeout
@@ -113,6 +113,31 @@ class EdiEnergyScraper:
         _logger.info("Downloaded %i files", len(download_tasks))
         self._remove_old_files(all_metadata)
         _logger.info("Finished mirroring")
+
+    @overload
+    async def get_best_match(self, matcher: Callable[[list[Document]], None], path: Path | None = None) -> None: ...
+    @overload
+    async def get_best_match(self, matcher: Callable[[list[Document]], Document], path: Path | None = None) -> Path: ...
+    async def get_best_match(
+        self, matcher: Callable[[list[Document]], Document | None], path: Path | None = None
+    ) -> Path | None:
+        """
+        downloads _all_ metadata, then uses the provided matcher function to download the best matching document to the
+        specified path or default path (None) which then is returned.
+        This method allows you, to define your own ranking function, e.g. by sorting all .docx AHBs DESCending by
+        valid-from and then publication date and return the first MSCONS file.
+        None is returned if no document matches the criteria (i.e. your matcher returns no match).
+        """
+        all_metadata = await self.get_documents_overview()
+        matching_document = matcher(all_metadata)
+        if not matching_document:
+            _logger.debug("No document matches %s", matcher)
+            return None
+        downloaded_path = await self.download_document(matching_document)
+        if path is None:
+            return downloaded_path
+        downloaded_path.rename(path)
+        return path
 
 
 __all__ = ["EdiEnergyScraper"]

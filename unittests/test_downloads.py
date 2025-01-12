@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
 
+import pytest
 from aioresponses import aioresponses
+from more_itertools import last
 
 from edi_energy_scraper.apidocument import Document
 from edi_energy_scraper.scraper import EdiEnergyScraper
@@ -80,3 +82,50 @@ async def test_cleanup(tmp_path: Path) -> None:  # test is async to avoid Runtim
     assert not outdated_file_path.exists()
     assert recent_file_path.exists()
     assert recent_file_path2.exists()
+
+
+@pytest.mark.parametrize("with_own_path", [True, False])
+async def test_best_match(tmp_path: Path, with_own_path: bool) -> None:
+    test_folder = tmp_path / "test"
+    test_folder.mkdir()
+    path123 = test_folder / "foo_123.pdf"
+    path456 = test_folder / "foo_456.docx"
+    path789 = test_folder / "foo_bar_xyzadsiadakdslaskmd_1.4a_789.docx"
+    client = EdiEnergyScraper("https://bdew-mako.inv", test_folder)
+
+    async def get_fake_documents() -> list[Document]:
+        return [
+            Document.model_construct(fileId=123),
+            Document.model_construct(fileId=456),
+            Document.model_construct(fileId=789),
+        ]
+
+    async def download_fake_document(document: Document) -> Path:
+        if document.fileId == 123:
+            path123.touch()
+            return path123
+        if document.fileId == 456:
+            path456.touch()
+            return path456
+        if document.fileId == 789:
+            path789.touch()
+            return path789
+        raise NotImplementedError()
+
+    client.get_documents_overview = get_fake_documents  # type:ignore[method-assign]
+    client.download_document = download_fake_document  # type:ignore[method-assign]
+    if with_own_path:
+        own_path = tmp_path / "my_document"
+        actual = await client.get_best_match(  # type:ignore[attr-defined]
+            lambda ds: last(sorted(ds, key=lambda d: d.fileId)), own_path
+        )
+        assert actual == own_path
+        assert actual.exists()
+        assert not path123.exists() and not path456.exists() and not path789.exists()
+    else:
+        actual = await client.get_best_match(  # type:ignore[attr-defined]
+            lambda ds: last(sorted(ds, key=lambda d: d.fileId))
+        )
+        assert actual is not None and actual.exists() and actual.is_file()
+        assert actual == path789
+        assert not path123.exists() and not path456.exists() and path789.exists()
