@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Awaitable, Union
 
 import aiohttp
+from aiohttp import ClientTimeout
 from efoli import get_edifact_format_version
 from more_itertools import chunked
 
@@ -40,12 +41,13 @@ class EdiEnergyScraper:
             self._root_dir = path_to_mirror_directory
         self.tcp_connector = aiohttp.TCPConnector(limit_per_host=connection_limit)
         self._session = aiohttp.ClientSession(connector=self.tcp_connector)
+        self._timeout = ClientTimeout(total=30.0)
 
     async def get_documents_overview(self) -> list[Document]:
         """
         download meta information about all available documents
         """
-        documents_response = await self._session.get(f"{self._root_url}/api/documents", timeout=5)
+        documents_response = await self._session.get(f"{self._root_url}/api/documents", timeout=self._timeout)
         response_body = await documents_response.json()
         response_model = ResponseModel.model_validate(response_body)
         return response_model.data
