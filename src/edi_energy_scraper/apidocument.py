@@ -228,7 +228,7 @@ class Document(BaseModel):
             ),
         }
         return (
-            "{kind}_{edifact_format}{version}_{to_date}_{from_date}_{publication_date}_{flags}_{id}.{extension}".format(
+            "{kind}_{edifact_format}{version}_{from_date}_{to_date}_{publication_date}_{flags}_{id}.{extension}".format(
                 **placeholder_values
             )
         )

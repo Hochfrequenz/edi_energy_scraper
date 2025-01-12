@@ -54,7 +54,7 @@ class DocumentMetadata(BaseModel):
             is_consolidated_reading_version,
             is_informational_reading_version,
         ) = [x.lower() == "x" for x in filename_parts[-2]]
-        valid_to, valid_from, publ_date = [
+        valid_from, valid_to, publ_date = [
             datetime.strptime(fp, "%Y%m%d") for fp in [filename_parts[-5], filename_parts[-4], filename_parts[-3]]
         ]
         version = None if filename_parts[-6] == "NV" else filename_parts[-6]
