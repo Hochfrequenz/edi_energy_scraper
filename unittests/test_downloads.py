@@ -116,16 +116,12 @@ async def test_best_match(tmp_path: Path, with_own_path: bool) -> None:
     client.download_document = download_fake_document  # type:ignore[method-assign]
     if with_own_path:
         own_path = tmp_path / "my_document"
-        actual = await client.get_best_match(
-            lambda ds: last(sorted(ds, key=lambda d: d.fileId)), own_path
-        )
+        actual = await client.get_best_match(lambda ds: last(sorted(ds, key=lambda d: d.fileId)), own_path)
         assert actual == own_path
         assert actual.exists()
         assert not path123.exists() and not path456.exists() and not path789.exists()
     else:
-        actual = await client.get_best_match(
-            lambda ds: last(sorted(ds, key=lambda d: d.fileId))
-        )
+        actual = await client.get_best_match(lambda ds: last(sorted(ds, key=lambda d: d.fileId)))
         assert actual is not None and actual.exists() and actual.is_file()
         assert actual == path789
         assert not path123.exists() and not path456.exists() and path789.exists()
