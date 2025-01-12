@@ -64,7 +64,7 @@ async def test_download_file(tmp_path: Path) -> None:
     assert actual.suffix == ".pdf"
 
 
-def test_cleanup(tmp_path: Path) -> None:
+async def test_cleanup(tmp_path: Path) -> None: # test is async to await RuntimeError: no running event loop
     test_folder = tmp_path / "test"
     test_folder.mkdir()
     a_directory = test_folder / "adir"
