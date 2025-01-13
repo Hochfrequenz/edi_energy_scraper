@@ -65,7 +65,7 @@ tests = [
     "aioresponses==0.7.7",
     "freezegun==1.5.1",
     "pytest==8.3.4",
-    "pytest-asyncio==0.25.0",
+    "pytest-asyncio==0.25.2",
     "pytest-mock==3.14.0",
     "syrupy==4.8.1"
 ]
