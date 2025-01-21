@@ -25,6 +25,10 @@ From there you can e.g. commit the files into a VCS (like e.g. our [edi_energy_m
 
 We're all hoping for the day of true digitization on which this repository will become obsolete.
 
+### See also
+There is a simlar project in C#: [fabenset/edi-energy-extracto](https://github.com/fabsenet/edi-energy-extractor/).
+It also works with `bdew-mako.de`.
+
 ## How to use the Package (as a user)
 
 Install via pip:
