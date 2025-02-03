@@ -150,7 +150,7 @@ class Document(BaseModel):
     @property
     def document_version(self) -> str | None:
         """
-        returns something like "1.4a" or "2.0" for MIGs and AHBs
+        returns something like "1.4a", "2.0" or "S2.1" for MIGs and AHBs
         """
         match = _VersionPattern.match(self.title)
         if match is None:
