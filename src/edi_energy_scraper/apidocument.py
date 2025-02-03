@@ -158,6 +158,17 @@ class Document(BaseModel):
         return match.group("version")
 
     @property
+    def sparte(self) -> str | None:
+        """
+        returns the sparte of a UTILMD document
+        """
+        if "gas" in self.title.lower():
+            return "Gas"
+        if "strom" in self.title.lower():
+            return "Strom"
+        return None
+
+    @property
     def is_consolidated_reading_version(self) -> bool:
         """true if this is a konsolidierte Lesefassung"""
         if self.isConsolidatedReadingVersion:
