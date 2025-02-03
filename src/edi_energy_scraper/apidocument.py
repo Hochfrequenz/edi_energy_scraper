@@ -17,7 +17,9 @@ _FileKind: TypeAlias = Literal["MIG", "AHB", "EBD", "XSD", "EXCEL"]
 _MigPattern = re.compile(r".*\b[A-Z]{6}\sMIG\b.*")
 _AhbPattern = re.compile(r".*\bAHB\b.*")
 _FormatPattern = re.compile(r".*\b(?P<format>[A-Z]{6})\b.*")
-_VersionPattern = re.compile(r"^.*?\b(?P<version>\d+\.\d+[a-z]?)\b.*$")  # assumption: version is always before datum
+_VersionPattern = re.compile(
+    r"^.*?\b(?P<version>[GS]?\d+\.\d+[a-z]?)\b.*$"
+)  # assumption: version is always before datum
 _AlternativeKindPattern = re.compile(r"^(?P<name>\D+).*$")
 _StandPattern = re.compile(r".*Stand:\s*(?P<day>\d{1,2})\.(?P<month>\d{1,2})\.(?P<year>\d{4}).*")
 
