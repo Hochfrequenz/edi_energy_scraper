@@ -26,7 +26,7 @@ class DocumentMetadata(BaseModel):
     valid_from: date
     valid_until: date
     publication_date: date | None
-    version: Annotated[str, StringConstraints(strip_whitespace=True, pattern=r"^\d+\.\d+[a-z]?$")] | None
+    version: Annotated[str, StringConstraints(strip_whitespace=True, pattern=r"^[GS]?\d+\.\d+[a-z]?$")] | None
     is_consolidated_reading_version: bool
     is_extraordinary_publication: bool
     is_error_correction: bool
