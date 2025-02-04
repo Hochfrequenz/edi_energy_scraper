@@ -115,6 +115,7 @@ max-line-length = 120
 # even if they have no @pytest.mark.asyncio marker.
 # https://github.com/pytest-dev/pytest-asyncio#auto-mode
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 markers = ["snapshot: mark a test as a snapshot test"]
 # the following lines are needed if you would like to build a python package,
