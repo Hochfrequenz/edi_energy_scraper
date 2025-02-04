@@ -17,7 +17,9 @@ _FileKind: TypeAlias = Literal["MIG", "AHB", "EBD", "XSD", "EXCEL"]
 _MigPattern = re.compile(r".*\b[A-Z]{6}\sMIG\b.*")
 _AhbPattern = re.compile(r".*\bAHB\b.*")
 _FormatPattern = re.compile(r".*\b(?P<format>[A-Z]{6})\b.*")
-_VersionPattern = re.compile(r"^.*?\b(?P<version>\d+\.\d+[a-z]?)\b.*$")  # assumption: version is always before datum
+_VersionPattern = re.compile(
+    r"^.*?\b(?P<version>[GS]?\d+\.\d+[a-z]?)\b.*$"
+)  # assumption: version is always before datum
 _AlternativeKindPattern = re.compile(r"^(?P<name>\D+).*$")
 _StandPattern = re.compile(r".*Stand:\s*(?P<day>\d{1,2})\.(?P<month>\d{1,2})\.(?P<year>\d{4}).*")
 
@@ -148,12 +150,23 @@ class Document(BaseModel):
     @property
     def document_version(self) -> str | None:
         """
-        returns something like "1.4a" or "2.0" for MIGs and AHBs
+        returns something like "1.4a", "2.0" or "S2.1" for MIGs and AHBs
         """
         match = _VersionPattern.match(self.title)
         if match is None:
             return None
         return match.group("version")
+
+    @property
+    def sparte(self) -> str | None:
+        """
+        returns the sparte of a UTILMD document
+        """
+        if "gas" in self.title.lower():
+            return "Gas"
+        if "strom" in self.title.lower():
+            return "Strom"
+        return None
 
     @property
     def is_consolidated_reading_version(self) -> bool:
