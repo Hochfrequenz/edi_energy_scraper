@@ -43,6 +43,13 @@ class EdiEnergyScraper:
         self._session = aiohttp.ClientSession(connector=self.tcp_connector)
         self._timeout = ClientTimeout(total=30.0)
 
+    async def close(self):
+        """Properly closes the aiohttp session."""
+        if self._session and not self._session.closed:
+            await self._session.close()
+        if not self.tcp_connector.closed:
+            await self.tcp_connector.close()
+
     async def get_documents_overview(self) -> list[Document]:
         """
         download meta information about all available documents
@@ -138,6 +145,11 @@ class EdiEnergyScraper:
             return downloaded_path
         downloaded_path.rename(path)
         return path
+
+    def __del__(self) -> None:
+        """Ensure cleanup when the instance is destroyed."""
+        if not self._session.closed:
+            asyncio.create_task(self.close())
 
 
 __all__ = ["EdiEnergyScraper"]
