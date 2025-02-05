@@ -56,11 +56,25 @@ class EdiEnergyScraper:
         """removes those files that are no longer available online"""
         all_downloaded_files = (f for f in self._root_dir.rglob("**/*") if f.is_file())
         all_recent_file_ids = {str(d.fileId) for d in documents}
+        _logger.info(
+            "The fileIds of the %i downloaded files are: %s",
+            len(all_recent_file_ids),
+            ", ".join(sorted(all_recent_file_ids)),
+        )
+        number_of_files_removed: int = 0
         for downloaded_file in all_downloaded_files:
             file_id_of_downloaded_file = downloaded_file.stem.split("_")[-1]
-            if file_id_of_downloaded_file not in all_recent_file_ids:
-                _logger.debug("Removing %s", downloaded_file.absolute())
+            if file_id_of_downloaded_file in all_recent_file_ids:
+                _logger.debug(
+                    "File %s with fileId %s was downloaded right now. Won't delete it",
+                    downloaded_file.absolute(),
+                    file_id_of_downloaded_file,
+                )
+            else:
+                _logger.debug("Removing %s with fileId %s", downloaded_file.absolute(), file_id_of_downloaded_file)
                 downloaded_file.unlink()
+                number_of_files_removed += 1
+        _logger.info("%i old files have been removed", number_of_files_removed)
 
     async def download_document(self, document: Document) -> Path:
         """
