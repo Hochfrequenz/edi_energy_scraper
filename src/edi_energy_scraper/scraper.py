@@ -43,7 +43,7 @@ class EdiEnergyScraper:
         self._session = aiohttp.ClientSession(connector=self.tcp_connector)
         self._timeout = ClientTimeout(total=30.0)
 
-    async def close(self):
+    async def close(self) -> None:
         """Properly closes the aiohttp session."""
         if self._session and not self._session.closed:
             await self._session.close()
