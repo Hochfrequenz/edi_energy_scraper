@@ -59,7 +59,7 @@ class EdiEnergyScraper:
         _logger.info(
             "The fileIds of the %i downloaded files are: %s",
             len(all_recent_file_ids),
-            ", ".join(sorted(all_recent_file_ids)),
+            ", ".join(sorted(all_recent_file_ids, key=lambda x: int(x))),
         )
         number_of_files_removed: int = 0
         for downloaded_file in all_downloaded_files:
