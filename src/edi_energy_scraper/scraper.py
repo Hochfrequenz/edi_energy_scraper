@@ -61,10 +61,16 @@ class EdiEnergyScraper:
             len(all_recent_file_ids),
             ", ".join(sorted(all_recent_file_ids, key=int)),
         )
+        file_id_stem_mapping: dict[str, str] = {
+            str(d.fileId): Path(d.get_meaningful_file_name()).stem for d in documents
+        }
         number_of_files_removed: int = 0
         for downloaded_file in all_downloaded_files:
             file_id_of_downloaded_file = downloaded_file.stem.split("_")[-1]
-            if file_id_of_downloaded_file in all_recent_file_ids:
+            if (
+                file_id_of_downloaded_file in all_recent_file_ids
+                and downloaded_file.stem == file_id_stem_mapping[file_id_of_downloaded_file]
+            ):
                 _logger.debug(
                     "File %s with fileId %s was downloaded right now. Won't delete it",
                     downloaded_file.absolute(),
