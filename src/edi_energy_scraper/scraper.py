@@ -68,10 +68,20 @@ class EdiEnergyScraper:
             len(all_recent_file_ids),
             ", ".join(sorted(all_recent_file_ids, key=int)),
         )
+        file_id_stem_mapping: dict[str, str] = {
+            str(d.fileId): Path(d.get_meaningful_file_name()).stem for d in documents
+        }
         number_of_files_removed: int = 0
         for downloaded_file in all_downloaded_files:
+            # Do not attempt to get the file id by calling DocumentMetadata.from_filename(...),
+            # because the downloaded file might not match the schema anymore.
+            # You may also use this fact to distinguish old and new file, but this alone is not sufficient and won't
+            # find files that have been removed from the API but match the naming schema.
             file_id_of_downloaded_file = downloaded_file.stem.split("_")[-1]
-            if file_id_of_downloaded_file in all_recent_file_ids:
+            if (
+                file_id_of_downloaded_file in all_recent_file_ids
+                and downloaded_file.stem == file_id_stem_mapping[file_id_of_downloaded_file]
+            ):
                 _logger.debug(
                     "File %s with fileId %s was downloaded right now. Won't delete it",
                     downloaded_file.absolute(),
@@ -117,7 +127,7 @@ class EdiEnergyScraper:
     async def mirror(self) -> None:
         """
         Main method of the scraper.
-        Downloads all the files and pages and stores them in the filesystem.
+        Downloads all the filefs and pages and stores them in the filesystem.
         """
         if not self._root_dir.exists() or not self._root_dir.is_dir():
             # we'll raise an error for the root dir, but create sub dirs on the fly
