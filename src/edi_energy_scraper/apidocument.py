@@ -18,7 +18,7 @@ _MigPattern = re.compile(r".*\b[A-Z]{6}\sMIG\b.*")
 _AhbPattern = re.compile(r".*\bAHB\b.*")
 _FormatPattern = re.compile(r".*\b(?P<format>[A-Z]{6})\b.*")
 _VersionPattern = re.compile(
-    r"^.*?\b(?P<version>[GS]?\d+\.\d+[a-z]?)\b.*$"
+    r"^.*?\b(?P<version>(?:Gas |Strom |[GS])?\d+\.\d+[a-z]?)\b.*$"
 )  # assumption: version is always before datum
 _AlternativeKindPattern = re.compile(r"^(?P<name>\D+).*$")
 _StandPattern = re.compile(r".*Stand:\s*(?P<day>\d{1,2})\.(?P<month>\d{1,2})\.(?P<year>\d{4}).*")
@@ -155,7 +155,12 @@ class Document(BaseModel):
         match = _VersionPattern.match(self.title)
         if match is None:
             return None
-        return match.group("version")
+        version = match.group("version")
+        if "Gas" in version:
+            return version.replace("Gas ", "G")
+        if "Strom" in version:
+            return version.replace("Strom ", "S")
+        return version
 
     @property
     def sparte(self) -> str | None:
