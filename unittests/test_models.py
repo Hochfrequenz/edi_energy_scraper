@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Callable
 
 import pytest
-from efoli import EdifactFormat
+from efoli import EdifactFormat, get_edifact_format_version
 from syrupy.assertion import SnapshotAssertion
 
 from edi_energy_scraper.apidocument import Document, ResponseModel
@@ -55,6 +55,13 @@ def test_api_filenames_parsing() -> None:
     parsed_file_information: list[DocumentMetadata] = [DocumentMetadata.from_filename(fn) for fn in file_names]
     assert all(isinstance(x, DocumentMetadata) for x in parsed_file_information)
     for document, rescraped in zip(documents, parsed_file_information):
+
+        # gueltig_ab_formatversion = get_edifact_format_version(document.gueltig_ab)
+        # gueltig_bis_formatversion = get_edifact_format_version(document.gueltig_bis)
+        # is_format_version_consistent = gueltig_ab_formatversion <= gueltig_bis_formatversion
+        # if not is_format_version_consistent:
+        #     print(f"Format version inconsistency for {document.id}: {gueltig_ab_formatversion} <= {gueltig_bis_formatversion}")
+
         assert document.fileId == rescraped.id
         if rescraped.edifact_format:
             assert str(rescraped.edifact_format) in document.title
