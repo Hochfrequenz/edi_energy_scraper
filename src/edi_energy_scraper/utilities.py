@@ -32,14 +32,21 @@ def _have_different_metadata(path_new_file: Path, path_to_old_file: Path) -> boo
 
 def _get_valid_format_versions(valid_from: date, valid_to: date | None) -> list[EdifactFormatVersion]:
     """
-    Returns a list of EdifactFormatVersions that are valid between the given dates.
+    Get all valid EdifactFormatVersions for a given date range.
+    :param valid_from: Release date of document.
+    :param valid_to: Expiration date of document. Exclusive date. Might be None if not provided by BDEW/API.
+    :return: list of EdifactFormatVersions that are valid between the given dates.
     """
     valid_from_fv: EdifactFormatVersion = get_edifact_format_version(valid_from)
-    valid_to_fv: EdifactFormatVersion
+    valid_to_fv: EdifactFormatVersion  # last format version for which the document is valid
+    # there is no expiration date, so we take the latest format version
     if valid_to is None:
         valid_to_fv = EdifactFormatVersion(max(EdifactFormatVersion))
+    # the expiration date is before the release date. This is an error.
+    # We only take the release date to find the format version.
     elif valid_to <= valid_from:
         valid_to_fv = get_edifact_format_version(valid_from)
+    # The generic case.
     else:
         valid_to_fv = get_edifact_format_version(valid_to)
     return [

@@ -93,19 +93,20 @@ class EdiEnergyScraper:
                 number_of_files_removed += 1
         _logger.info("%i old files have been removed", number_of_files_removed)
 
-    async def download_all_fv_documents(self, document: Document) -> list[Path]:
-        """Downloads documents for all fitting format versions"""
+    async def download_document_for_all_fv(self, document: Document) -> list[Path]:
+        """Downloads document for all fitting format versions individually"""
         format_versions = _get_valid_format_versions(document.validFrom, document.validTo)
         file_paths = []
+
         for format_version in format_versions:
-            file_paths.append(await self.download_single_document(document, format_version))
+            file_paths.append(await self.download_document_per_fv(document, format_version))
         return file_paths
 
-    async def download_single_document(
+    async def download_document_per_fv(
         self, document: Document, format_version: EdifactFormatVersion | None = None
     ) -> Path:
         """
-        Collects all download task for a given document
+        Download task for a given document for a single format version.
         """
         if format_version is None:
             format_version = get_edifact_format_version(document.validFrom)
@@ -149,7 +150,7 @@ class EdiEnergyScraper:
             if not document.isFree:
                 _logger.debug("Skipping %s because it's not free", document.title)
                 continue
-            download_tasks.append(self.download_all_fv_documents(document))
+            download_tasks.append(self.download_document_for_all_fv(document))
         for download_chunk in chunked(download_tasks, 10):
             await asyncio.gather(*download_chunk)
         _logger.info("Downloaded %i files", len(download_tasks))
@@ -175,7 +176,7 @@ class EdiEnergyScraper:
         if not matching_document:
             _logger.debug("No document matches %s", matcher)
             return None
-        downloaded_path = await self.download_single_document(matching_document)
+        downloaded_path = await self.download_document_per_fv(matching_document)
         if path is None:
             return downloaded_path
         downloaded_path.rename(path)
