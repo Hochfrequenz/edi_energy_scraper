@@ -34,16 +34,18 @@ def _get_valid_format_versions(valid_from: date, valid_to: date | None) -> list[
     """
     Returns a list of EdifactFormatVersions that are valid between the given dates.
     """
-    valid_from_fv = get_edifact_format_version(valid_from)
-    valid_to_fv = (
-        max(EdifactFormatVersion)
-        if valid_to is None
-        else get_edifact_format_version(valid_from) if valid_to <= valid_from else get_edifact_format_version(valid_to)
-    )
+    valid_from_fv: EdifactFormatVersion = get_edifact_format_version(valid_from)
+    valid_to_fv: EdifactFormatVersion
+    if valid_to is None:
+        valid_to_fv = EdifactFormatVersion(max(EdifactFormatVersion))
+    elif valid_to <= valid_from:
+        valid_to_fv = get_edifact_format_version(valid_from)
+    else:
+        valid_to_fv = get_edifact_format_version(valid_to)
     return [
-        format_version
+        EdifactFormatVersion(format_version)
         for format_version in EdifactFormatVersion
-        if format_version >= valid_from_fv and format_version <= valid_to_fv
+        if valid_from_fv <= format_version <= valid_to_fv
     ]
 
 
