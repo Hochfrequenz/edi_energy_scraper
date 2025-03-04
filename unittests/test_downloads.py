@@ -62,7 +62,7 @@ async def test_download_file(tmp_path: Path) -> None:
                 status=200,
                 body=example_pdf.read(),
             )
-            actual = await client.download_document(example_document)
+            actual = await client.download_single_document(example_document)
     assert actual.is_file()
     assert actual.suffix == ".pdf"
 
