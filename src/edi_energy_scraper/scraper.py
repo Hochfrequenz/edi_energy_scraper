@@ -11,7 +11,7 @@ from efoli import get_edifact_format_version
 from more_itertools import chunked
 
 from edi_energy_scraper.apidocument import Document, ResponseModel
-from edi_energy_scraper.utilities import _have_different_metadata
+from edi_energy_scraper.utilities import _get_valid_format_versions, _have_different_metadata
 
 _logger = logging.getLogger(__name__)
 
