@@ -41,7 +41,7 @@ def _get_valid_format_versions(valid_from: date, valid_to: date | None) -> list[
     valid_to_fv: EdifactFormatVersion  # last format version for which the document is valid
     # there is no expiration date, so we take the latest format version
     if valid_to is None:
-        valid_to_fv = EdifactFormatVersion(max(EdifactFormatVersion))
+        valid_to_fv = EdifactFormatVersion(max(EdifactFormatVersion, key=lambda v: v.value))
     # the expiration date is before the release date. This is an error.
     # We only take the release date to find the format version.
     elif valid_to <= valid_from:
