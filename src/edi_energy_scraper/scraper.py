@@ -100,6 +100,13 @@ class EdiEnergyScraper:
         This method takes a document provided by the API and determines all valid format versions based on the
         `validFrom` and `validTo` dates. It then downloads the file for each valid format version individually.
 
+        Background: Sometimes valid documents stay valid, even if the format version changes.
+        One example is the ORDRSP AHB which is unchanged between FV2310 and FV2504.
+        We then store the same file in multiple format version directories, because downstream
+        tools and services rely on the file to be present in a FV folder.
+        So we spare those tools from implementing fallthrough kind of logic.
+        All the paths returned contain the same file but at different locations.
+
         :param document: The document to be downloaded.
         :return: A list of paths where the downloaded files are stored.
         """

@@ -35,7 +35,8 @@ def _get_valid_format_versions(valid_from: date, valid_to: date | None) -> list[
     Get all valid EdifactFormatVersions for a given date range.
     Takes into account errors in the bdew-mako.de API where valid_to <= valid_from.
     :param valid_from: Release date of document.
-    :param valid_to: Expiration date of document. Exclusive date. Might be None if not provided by BDEW/API.
+    :param valid_to: Expiration date of document. Sets format version depending on threshold dates in efoli.
+    Therefore, it is inclusive. Might be None if not provided by BDEW/API.
     :return: list of EdifactFormatVersions that are valid between the given dates.
     """
     valid_from_fv: EdifactFormatVersion = get_edifact_format_version(valid_from)

@@ -35,7 +35,12 @@ def test_extraction() -> None:
         ),
         pytest.param(date(2021, 9, 30), date(2021, 9, 29), [EdifactFormatVersion.FV2104]),
         pytest.param(date(2021, 9, 30), date(2021, 9, 30), [EdifactFormatVersion.FV2104]),
-        pytest.param(date(2021, 9, 30), date(2021, 10, 1), [EdifactFormatVersion.FV2104], id="exclusive valid_to"),
+        pytest.param(
+            date(2021, 9, 30),
+            date(2021, 10, 1),
+            [EdifactFormatVersion.FV2104, EdifactFormatVersion.FV2110],
+            id="inlcusive valid_to",
+        ),
         pytest.param(date(2023, 9, 30), date(2024, 4, 1), [EdifactFormatVersion.FV2304, EdifactFormatVersion.FV2310]),
         pytest.param(date(2023, 4, 1), date(2023, 4, 1), [EdifactFormatVersion.FV2304]),
     ],
