@@ -94,7 +94,15 @@ class EdiEnergyScraper:
         _logger.info("%i old files have been removed", number_of_files_removed)
 
     async def download_document_for_all_fv(self, document: Document) -> list[Path]:
-        """Downloads document for all fitting format versions individually"""
+        """
+        Downloads a specific document for all valid format versions.
+
+        This method takes a document provided by the API and determines all valid format versions based on the
+        `validFrom` and `validTo` dates. It then downloads the file for each valid format version individually.
+
+        :param document: The document to be downloaded.
+        :return: A list of paths where the downloaded files are stored.
+        """
         format_versions = _get_valid_format_versions(document.validFrom, document.validTo)
         file_paths = []
 
@@ -106,7 +114,16 @@ class EdiEnergyScraper:
         self, document: Document, format_version: EdifactFormatVersion | None = None
     ) -> Path:
         """
-        Download task for a given document for a single format version.
+        Downloads a specific document for a single format version.
+
+        This method downloads a document for a given format version (usually, we want to download a single file for all
+        valid format versions, not only the format version determined by the 'validFrom' date).
+        If no format version is provided, it defaults to the format version corresponding to the `validFrom` date of
+        the document.
+
+        :param document: The document to be downloaded.
+        :param format_version: The format version for which the document should be downloaded. Defaults to None.
+        :return: The path where the downloaded file is stored.
         """
         if format_version is None:
             format_version = get_edifact_format_version(document.validFrom)
