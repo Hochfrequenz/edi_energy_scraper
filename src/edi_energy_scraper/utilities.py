@@ -33,6 +33,7 @@ def _have_different_metadata(path_new_file: Path, path_to_old_file: Path) -> boo
 def _get_valid_format_versions(valid_from: date, valid_to: date | None) -> list[EdifactFormatVersion]:
     """
     Get all valid EdifactFormatVersions for a given date range.
+    Takes into account errors in the bdew-mako.de API where valid_to <= valid_from.
     :param valid_from: Release date of document.
     :param valid_to: Expiration date of document. Exclusive date. Might be None if not provided by BDEW/API.
     :return: list of EdifactFormatVersions that are valid between the given dates.
