@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 from aioresponses import aioresponses
+from efoli import EdifactFormatVersion
 from more_itertools import last
 
 from edi_energy_scraper import DocumentMetadata
@@ -62,7 +63,7 @@ async def test_download_file(tmp_path: Path) -> None:
                 status=200,
                 body=example_pdf.read(),
             )
-            actual = await client.download_document(example_document)
+            actual = await client.download_document_per_fv(example_document)
     assert actual.is_file()
     assert actual.suffix == ".pdf"
 
@@ -152,7 +153,7 @@ async def test_best_match(tmp_path: Path, with_own_path: bool) -> None:
             Document.model_construct(fileId=789),
         ]
 
-    async def download_fake_document(document: Document) -> Path:
+    async def download_fake_document(document: Document, format_version: EdifactFormatVersion | None = None) -> Path:
         if document.fileId == 123:
             path123.touch()
             return path123
@@ -165,7 +166,7 @@ async def test_best_match(tmp_path: Path, with_own_path: bool) -> None:
         raise NotImplementedError()
 
     client.get_documents_overview = get_fake_documents  # type:ignore[method-assign]
-    client.download_document = download_fake_document  # type:ignore[method-assign]
+    client.download_document_per_fv = download_fake_document  # type:ignore[method-assign]
     if with_own_path:
         own_path = tmp_path / "my_document"
         actual = await client.get_best_match(lambda ds: last(sorted(ds, key=lambda d: d.fileId)), own_path)

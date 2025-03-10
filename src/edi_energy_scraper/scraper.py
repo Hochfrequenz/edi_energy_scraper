@@ -7,11 +7,11 @@ from typing import Awaitable, Callable, Union, overload
 
 import aiohttp
 from aiohttp import ClientTimeout
-from efoli import get_edifact_format_version
+from efoli import EdifactFormatVersion, get_edifact_format_version
 from more_itertools import chunked
 
 from edi_energy_scraper.apidocument import Document, ResponseModel
-from edi_energy_scraper.utilities import _have_different_metadata
+from edi_energy_scraper.utilities import _get_valid_format_versions, _have_different_metadata
 
 _logger = logging.getLogger(__name__)
 
@@ -93,11 +93,47 @@ class EdiEnergyScraper:
                 number_of_files_removed += 1
         _logger.info("%i old files have been removed", number_of_files_removed)
 
-    async def download_document(self, document: Document) -> Path:
+    async def download_document_for_all_fv(self, document: Document) -> list[Path]:
         """
-        downloads the file related to the given document and returns its path
+        Downloads a specific document for all valid format versions.
+
+        This method takes a document provided by the API and determines all valid format versions based on the
+        `validFrom` and `validTo` dates. It then downloads the file for each valid format version individually.
+
+        Background: Sometimes valid documents stay valid, even if the format version changes.
+        One example is the ORDRSP AHB which is unchanged between FV2310 and FV2504.
+        We then store the same file in multiple format version directories, because downstream
+        tools and services rely on the file to be present in a FV folder.
+        So we spare those tools from implementing fallthrough kind of logic.
+        All the paths returned contain the same file but at different locations.
+
+        :param document: The document to be downloaded.
+        :return: A list of paths where the downloaded files are stored.
         """
-        format_version = get_edifact_format_version(document.validFrom)
+        format_versions = _get_valid_format_versions(document.validFrom, document.validTo)
+        file_paths = []
+
+        for format_version in format_versions:
+            file_paths.append(await self.download_document_per_fv(document, format_version))
+        return file_paths
+
+    async def download_document_per_fv(
+        self, document: Document, format_version: EdifactFormatVersion | None = None
+    ) -> Path:
+        """
+        Downloads a specific document for a single format version.
+
+        This method downloads a document for a given format version (usually, we want to download a single file for all
+        valid format versions, not only the format version determined by the 'validFrom' date).
+        If no format version is provided, it defaults to the format version corresponding to the `validFrom` date of
+        the document.
+
+        :param document: The document to be downloaded.
+        :param format_version: The format version for which the document should be downloaded. Defaults to None.
+        :return: The path where the downloaded file is stored.
+        """
+        if format_version is None:
+            format_version = get_edifact_format_version(document.validFrom)
         fv_path = self._root_dir / Path(format_version)
         if not fv_path.exists():
             _logger.debug("Creating directory %s", fv_path.absolute())
@@ -127,18 +163,18 @@ class EdiEnergyScraper:
     async def mirror(self) -> None:
         """
         Main method of the scraper.
-        Downloads all the filefs and pages and stores them in the filesystem.
+        Downloads all the files and pages and stores them in the filesystem.
         """
         if not self._root_dir.exists() or not self._root_dir.is_dir():
             # we'll raise an error for the root dir, but create sub dirs on the fly
             raise ValueError(f"The path {self._root_dir} is either no directory or does not exist")
-        download_tasks: list[Awaitable[Path]] = []
+        download_tasks: list[Awaitable[list[Path]]] = []
         all_metadata = await self.get_documents_overview()
         for document in all_metadata:
             if not document.isFree:
                 _logger.debug("Skipping %s because it's not free", document.title)
                 continue
-            download_tasks.append(self.download_document(document))
+            download_tasks.append(self.download_document_for_all_fv(document))
         for download_chunk in chunked(download_tasks, 10):
             await asyncio.gather(*download_chunk)
         _logger.info("Downloaded %i files", len(download_tasks))
@@ -164,7 +200,7 @@ class EdiEnergyScraper:
         if not matching_document:
             _logger.debug("No document matches %s", matcher)
             return None
-        downloaded_path = await self.download_document(matching_document)
+        downloaded_path = await self.download_document_per_fv(matching_document)
         if path is None:
             return downloaded_path
         downloaded_path.rename(path)
