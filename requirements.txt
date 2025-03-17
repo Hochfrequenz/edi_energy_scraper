@@ -34,7 +34,7 @@ propcache==0.3.0
     #   yarl
 pydantic==2.10.6
     # via edi_energy_scraper (pyproject.toml)
-pydantic-core==2.27.2
+pydantic-core==2.32.0
     # via pydantic
 pypdf==5.4.0
     # via edi_energy_scraper (pyproject.toml)
