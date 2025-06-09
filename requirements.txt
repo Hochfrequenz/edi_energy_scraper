@@ -16,7 +16,7 @@ attrs==25.3.0
     # via aiohttp
 efoli==2.0.0
     # via edi_energy_scraper (pyproject.toml)
-frozenlist==1.6.0
+frozenlist==1.6.2
     # via
     #   aiohttp
     #   aiosignal
