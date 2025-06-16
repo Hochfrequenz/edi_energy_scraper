@@ -42,7 +42,7 @@ pytz==2025.2
     # via
     #   edi_energy_scraper (pyproject.toml)
     #   efoli
-typing-extensions==4.13.2
+typing-extensions==4.14.0
     # via
     #   pydantic
     #   pydantic-core
