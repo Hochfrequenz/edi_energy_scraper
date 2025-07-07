@@ -36,7 +36,7 @@ pydantic==2.10.6
     # via edi_energy_scraper (pyproject.toml)
 pydantic-core==2.27.2
     # via pydantic
-pypdf==5.6.0
+pypdf==5.7.0
     # via edi_energy_scraper (pyproject.toml)
 pytz==2025.2
     # via
