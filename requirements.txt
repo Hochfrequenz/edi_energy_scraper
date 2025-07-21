@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.11
+aiohttp==3.12.14
     # via edi_energy_scraper (pyproject.toml)
 aiosignal==1.4.0
     # via aiohttp
