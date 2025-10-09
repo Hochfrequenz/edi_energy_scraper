@@ -6,46 +6,49 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.15
+aiohttp==3.13.0
     # via edi_energy_scraper (pyproject.toml)
 aiosignal==1.4.0
     # via aiohttp
 annotated-types==0.7.0
     # via pydantic
-attrs==25.3.0
+attrs==25.4.0
     # via aiohttp
-efoli==2.1.0
+efoli==2.1.1
     # via edi_energy_scraper (pyproject.toml)
-frozenlist==1.7.0
+frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
 idna==3.10
     # via yarl
-more-itertools==10.7.0
+more-itertools==10.8.0
     # via edi_energy_scraper (pyproject.toml)
-multidict==6.6.3
+multidict==6.7.0
     # via
     #   aiohttp
     #   yarl
-propcache==0.3.2
+propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
-pydantic==2.10.6
+pydantic==2.12.0
     # via edi_energy_scraper (pyproject.toml)
-pydantic-core==2.27.2
+pydantic-core==2.41.1
     # via pydantic
-pypdf==6.0.0
+pypdf==6.1.1
     # via edi_energy_scraper (pyproject.toml)
 pytz==2025.2
     # via
     #   edi_energy_scraper (pyproject.toml)
     #   efoli
-typing-extensions==4.14.1
+typing-extensions==4.15.0
     # via
     #   aiosignal
     #   pydantic
     #   pydantic-core
+    #   typing-inspection
+typing-inspection==0.4.2
+    # via pydantic
 yarl==1.22.0
     # via aiohttp
