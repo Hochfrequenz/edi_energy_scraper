@@ -20,7 +20,7 @@ frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-idna==3.10
+idna==3.11
     # via yarl
 more-itertools==10.8.0
     # via edi_energy_scraper (pyproject.toml)
