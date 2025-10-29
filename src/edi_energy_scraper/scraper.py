@@ -147,7 +147,7 @@ class EdiEnergyScraper:
             while chunk := await response.content.read(1024):
                 downloaded_file.write(chunk)
         if file_path.exists() and file_path.suffix == ".pdf":
-            _logger.debug("PDF file %s already exists. Checking metadata")
+            _logger.debug("PDF file %s already exists. Checking metadata", file_path.absolute())
             if _have_different_metadata(file_path, tmp_file_path):
                 _logger.debug("Metadata for %s differ. Overwriting...", file_path.absolute())
                 file_path.unlink()
