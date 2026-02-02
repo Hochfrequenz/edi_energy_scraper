@@ -24,7 +24,7 @@ idna==3.11
     # via yarl
 more-itertools==10.8.0
     # via edi_energy_scraper (pyproject.toml)
-multidict==6.7.0
+multidict==6.7.1
     # via
     #   aiohttp
     #   yarl
