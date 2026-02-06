@@ -62,9 +62,7 @@ class EdiEnergyScraper:
         downloadable = [doc for doc in response_model.data if doc.is_downloadable]
         non_downloadable_count = len(response_model.data) - len(downloadable)
         if non_downloadable_count > 0:
-            _logger.info(
-                "Skipping %i external-link-only documents (no fileId)", non_downloadable_count
-            )
+            _logger.info("Skipping %i external-link-only documents (no fileId)", non_downloadable_count)
         return downloadable
 
     def _remove_old_files(self, documents: list[Document]) -> None:
@@ -141,9 +139,7 @@ class EdiEnergyScraper:
         :return: The path where the downloaded file is stored.
         """
         if not document.is_downloadable:
-            raise ValueError(
-                f"Document {document.id} ('{document.title}') is not downloadable (no fileId/fileType)"
-            )
+            raise ValueError(f"Document {document.id} ('{document.title}') is not downloadable (no fileId/fileType)")
         if format_version is None:
             format_version = get_edifact_format_version(document.validFrom)
         fv_path = self._root_dir / Path(format_version)

@@ -248,9 +248,7 @@ class Document(BaseModel):
         Raises ValueError for non-downloadable (external link) documents.
         """
         if not self.is_downloadable:
-            raise ValueError(
-                f"Cannot generate filename for non-downloadable document {self.id} ('{self.title}')"
-            )
+            raise ValueError(f"Cannot generate filename for non-downloadable document {self.id} ('{self.title}')")
         placeholder_values = {
             "publication_date": (self.publication_date or self.gueltig_ab).strftime("%Y%m%d"),
             "from_date": self.gueltig_ab.strftime("%Y%m%d"),
