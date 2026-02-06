@@ -2,13 +2,16 @@
 model classes for the bdew-mako API
 """
 
+import logging
 import re
 from datetime import date, datetime, timezone
 from typing import Literal, Optional, TypeAlias
 
 import pytz
 from efoli import EdifactFormat
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
+
+_logger = logging.getLogger(__name__)
 
 _berlin_time = pytz.timezone("Europe/Berlin")
 
@@ -31,7 +34,7 @@ class Document(BaseModel):
 
     userId: int
     id: int
-    fileId: int
+    fileId: Optional[int]  # None for external link documents, e.g. "API-Webdienste Strom" (id=8230)
     title: str
     version: Optional[str]  # this is NOT '1.4a' or something like that (you have to read those from the title)
     topicId: int
@@ -45,9 +48,14 @@ class Document(BaseModel):
     isErrorCorrection: bool  # you cannot rely on this flag to be set
     correctionDate: Optional[date]
     isInformationalReadingVersion: bool  # you cannot rely on this flag to be set
-    fileType: str
+    fileType: Optional[str]  # None for external link documents, e.g. "Verzeichnisdienst API" (id=8232)
     topicGroupSortNr: int
     topicSortNr: int
+    # Since ~2026-01, some documents are external links instead of hosted files.
+    # Examples: "API-Webdienste Strom - Release 1.0.0" links to https://github.com/EDI-Energy/api-electricity/releases
+    # These have fileId=None, fileType=None and link set to the external URL.
+    link: Optional[str] = None
+    linkTopicGroupId: Optional[int] = None
 
     @field_validator("publicationDate", "validFrom", "validTo", "correctionDate", mode="before")
     @classmethod
@@ -74,6 +82,17 @@ class Document(BaseModel):
             return value
         return value
 
+    @model_validator(mode="after")
+    def _validate_downloadable_consistency(self) -> "Document":
+        if (self.fileId is None) != (self.fileType is None):
+            _logger.warning(
+                "Document %i has inconsistent fileId=%r / fileType=%r",
+                self.id,
+                self.fileId,
+                self.fileType,
+            )
+        return self
+
     @property
     def gueltig_bis(self) -> date:
         """
@@ -87,6 +106,11 @@ class Document(BaseModel):
         date from which the document is valid
         """
         return self.validFrom
+
+    @property
+    def is_downloadable(self) -> bool:
+        """True if this document has a file hosted on bdew-mako.de (i.e. has a fileId and fileType)."""
+        return self.fileId is not None and self.fileType is not None
 
     @property
     def file_extension(self) -> _FileExtension:
@@ -116,9 +140,9 @@ class Document(BaseModel):
             return "AHB"
         if "entscheidungsbaum" in self.title.lower():
             return "EBD"
-        if self.file_extension == "xsd":
+        if self.is_downloadable and self.file_extension == "xsd":
             return "XSD"
-        if self.file_extension == "xlsx":
+        if self.is_downloadable and self.file_extension == "xlsx":
             return "EXCEL"
         return None
 
@@ -221,8 +245,10 @@ class Document(BaseModel):
         The file name returned does have an extension, e.g. it ends with ".pdf".
         The file name returned is unique (as long as the file id is unique).
         This function can be 'reversed' using DocumentMetadata.from_filename(...).
+        Raises ValueError for non-downloadable (external link) documents.
         """
-
+        if not self.is_downloadable:
+            raise ValueError(f"Cannot generate filename for non-downloadable document {self.id} ('{self.title}')")
         placeholder_values = {
             "publication_date": (self.publication_date or self.gueltig_ab).strftime("%Y%m%d"),
             "from_date": self.gueltig_ab.strftime("%Y%m%d"),

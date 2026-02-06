@@ -25,6 +25,9 @@ async def test_download_overview() -> None:
         actual = await client.get_documents_overview()
     assert any(actual)
     assert all(isinstance(x, Document) for x in actual)
+    assert all(d.is_downloadable for d in actual)
+    total_count = len(response_body["data"])
+    assert len(actual) < total_count  # some external-link docs should have been filtered out
 
 
 async def test_download_file(tmp_path: Path) -> None:
@@ -135,6 +138,39 @@ async def test_cleanup(tmp_path: Path) -> None:  # test is async to avoid Runtim
     assert a_directory.exists()
 
 
+async def test_download_non_downloadable_raises(tmp_path: Path) -> None:
+    test_folder = tmp_path / "test"
+    client = EdiEnergyScraper("https://bdew-mako.inv", test_folder)
+    external_link_document = Document.model_validate(
+        {
+            "userId": 0,
+            "id": 8230,
+            "fileId": None,
+            "title": "API-Webdienste Strom - Release 1.0.0",
+            "version": None,
+            "topicId": 247,
+            "topicGroupId": 16,
+            "isFree": True,
+            "publicationDate": None,
+            "validFrom": "2026-01-29T00:00:00",
+            "validTo": None,
+            "isConsolidatedReadingVersion": False,
+            "isExtraordinaryPublication": False,
+            "isErrorCorrection": False,
+            "correctionDate": None,
+            "isInformationalReadingVersion": False,
+            "fileType": None,
+            "topicGroupSortNr": 0,
+            "topicSortNr": 1,
+            "link": "https://github.com/EDI-Energy/api-electricity/releases/tag/1.0.0",
+            "linkTopicGroupId": None,
+        }
+    )
+    assert not external_link_document.is_downloadable
+    with pytest.raises(ValueError, match="not downloadable"):
+        await client.download_document_per_fv(external_link_document)
+
+
 @pytest.mark.parametrize("with_own_path", [True, False])
 async def test_best_match(tmp_path: Path, with_own_path: bool) -> None:
     test_folder = tmp_path / "test"
@@ -167,12 +203,12 @@ async def test_best_match(tmp_path: Path, with_own_path: bool) -> None:
     client.download_document_per_fv = download_fake_document  # type: ignore[method-assign]
     if with_own_path:
         own_path = tmp_path / "my_document"
-        actual = await client.get_best_match(lambda ds: last(sorted(ds, key=lambda d: d.fileId)), own_path)
+        actual = await client.get_best_match(lambda ds: last(sorted(ds, key=lambda d: d.fileId or 0)), own_path)
         assert actual == own_path
         assert actual.exists()
         assert not path123.exists() and not path456.exists() and not path789.exists()
     else:
-        actual = await client.get_best_match(lambda ds: last(sorted(ds, key=lambda d: d.fileId)))
+        actual = await client.get_best_match(lambda ds: last(sorted(ds, key=lambda d: d.fileId or 0)))
         assert actual is not None and actual.exists() and actual.is_file()
         assert actual == path789
         assert not path123.exists() and not path456.exists() and path789.exists()

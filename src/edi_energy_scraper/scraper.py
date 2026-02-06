@@ -52,12 +52,18 @@ class EdiEnergyScraper:
 
     async def get_documents_overview(self) -> list[Document]:
         """
-        download meta information about all available documents
+        download meta information about all available documents;
+        filters out external-link-only documents that have no downloadable file (fileId is None),
+        e.g. "API-Webdienste Strom - Release 1.0.0" which links to a GitHub release instead
         """
         documents_response = await self._session.get(f"{self._root_url}/api/documents", timeout=self._timeout)
         response_body = await documents_response.json()
         response_model = ResponseModel.model_validate(response_body)
-        return response_model.data
+        downloadable = [doc for doc in response_model.data if doc.is_downloadable]
+        non_downloadable_count = len(response_model.data) - len(downloadable)
+        if non_downloadable_count > 0:
+            _logger.info("Skipping %i external-link-only documents (no fileId)", non_downloadable_count)
+        return downloadable
 
     def _remove_old_files(self, documents: list[Document]) -> None:
         """removes those files that are no longer available online"""
@@ -132,6 +138,8 @@ class EdiEnergyScraper:
         :param format_version: The format version for which the document should be downloaded. Defaults to None.
         :return: The path where the downloaded file is stored.
         """
+        if not document.is_downloadable:
+            raise ValueError(f"Document {document.id} ('{document.title}') is not downloadable (no fileId/fileType)")
         if format_version is None:
             format_version = get_edifact_format_version(document.validFrom)
         fv_path = self._root_dir / Path(format_version)

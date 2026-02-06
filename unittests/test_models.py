@@ -44,13 +44,28 @@ def test_single_documents(json_file: Path, expected_document_predicate: Callable
 def test_api_filenames(snapshot: SnapshotAssertion) -> None:
     with open(Path(__file__).parent / "get_documents_response_body.json", "r", encoding="utf-8") as f:
         documents = ResponseModel.model_validate_json(f.read())
-    actual_file_names = [x.get_meaningful_file_name() for x in documents.data]
+    actual_file_names = [x.get_meaningful_file_name() for x in documents.data if x.is_downloadable]
     snapshot.assert_match(actual_file_names)
+
+
+def test_external_link_documents() -> None:
+    with open(Path(__file__).parent / "get_documents_response_body.json", "r", encoding="utf-8") as f:
+        documents = ResponseModel.model_validate_json(f.read())
+    external = [d for d in documents.data if not d.is_downloadable]
+    assert len(external) >= 1
+    for doc in external:
+        assert doc.fileId is None
+        assert doc.fileType is None
+        assert doc.link is not None
+        assert doc.link.startswith("https://")
+        assert doc.file_kind is None  # should not crash
+        with pytest.raises(ValueError, match="non-downloadable"):
+            doc.get_meaningful_file_name()
 
 
 def test_api_filenames_parsing() -> None:
     with open(Path(__file__).parent / "get_documents_response_body.json", "r", encoding="utf-8") as f:
-        documents = ResponseModel.model_validate_json(f.read()).data
+        documents = [d for d in ResponseModel.model_validate_json(f.read()).data if d.is_downloadable]
     file_names = [x.get_meaningful_file_name() for x in documents]
     parsed_file_information: list[DocumentMetadata] = [DocumentMetadata.from_filename(fn) for fn in file_names]
     assert all(isinstance(x, DocumentMetadata) for x in parsed_file_information)
