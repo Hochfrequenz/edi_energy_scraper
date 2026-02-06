@@ -70,7 +70,7 @@ class DocumentMetadata(BaseModel):
                 # auszutauschenden Daten" which contains UTILMD, ORDERS, ORDRSP and MSCONS.
                 # without checking the actual file content we have no chance to derive this information.
                 _logger.warning("Could not derive EdifactFormat for %s", filename)
-            kind = filename.split("_")[0]  # type:ignore[assignment]
+            kind = filename.split("_")[0]  # type: ignore[assignment]
         elif filename.startswith("EBD_"):
             kind = "EBD"
         elif filename.endswith("xsd"):

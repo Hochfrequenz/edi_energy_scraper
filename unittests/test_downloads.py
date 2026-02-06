@@ -30,8 +30,7 @@ async def test_download_overview() -> None:
 async def test_download_file(tmp_path: Path) -> None:
     test_folder = tmp_path / "test"
     client = EdiEnergyScraper("https://bdew-mako.inv", test_folder)
-    example_document = Document.model_validate_json(
-        """
+    example_document = Document.model_validate_json("""
     {
       "userId": 0,
       "id": 6288,
@@ -53,8 +52,7 @@ async def test_download_file(tmp_path: Path) -> None:
       "topicGroupSortNr": 7,
       "topicSortNr": 1
     }
-    """
-    )
+    """)
     with open(Path(__file__).parent / "example_file.pdf", "rb") as example_pdf:
         with aioresponses() as mocked_tmds:
             mocked_get_url = f"https://bdew-mako.inv/api/downloadFile/8545"
@@ -165,8 +163,8 @@ async def test_best_match(tmp_path: Path, with_own_path: bool) -> None:
             return path789
         raise NotImplementedError()
 
-    client.get_documents_overview = get_fake_documents  # type:ignore[method-assign]
-    client.download_document_per_fv = download_fake_document  # type:ignore[method-assign]
+    client.get_documents_overview = get_fake_documents  # type: ignore[method-assign]
+    client.download_document_per_fv = download_fake_document  # type: ignore[method-assign]
     if with_own_path:
         own_path = tmp_path / "my_document"
         actual = await client.get_best_match(lambda ds: last(sorted(ds, key=lambda d: d.fileId)), own_path)
