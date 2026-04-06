@@ -22,7 +22,7 @@ frozenlist==1.8.0
     #   aiosignal
 idna==3.11
     # via yarl
-more-itertools==10.8.0
+more-itertools==11.0.1
     # via edi_energy_scraper (pyproject.toml)
 multidict==6.7.1
     # via
