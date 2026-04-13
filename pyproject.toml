@@ -71,7 +71,7 @@ tests = [
     "syrupy==5.1.0"
 ]
 type_check = [
-    "mypy==1.20.0",
+    "mypy==1.20.1",
     "types-pytz==2026.1.1.20260304"
 ]
 
