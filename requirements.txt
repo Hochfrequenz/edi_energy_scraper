@@ -38,7 +38,7 @@ pydantic-core==2.41.1
     # via pydantic
 pypdf==6.10.2
     # via edi_energy_scraper (pyproject.toml)
-pytz==2026.1.post1
+pytz==2026.2
     # via
     #   edi_energy_scraper (pyproject.toml)
     #   efoli
